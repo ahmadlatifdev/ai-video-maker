@@ -1,1 +1,110 @@
-<h1>Hello World</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Video Maker | BossMind</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: #f1f5f9;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            text-align: center;
+        }
+        .logo {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+        .subtitle {
+            font-size: 1.5rem;
+            color: #94a3b8;
+            max-width: 700px;
+            margin-bottom: 3rem;
+        }
+        .btn {
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            color: white;
+            border: none;
+            padding: 1rem 3rem;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.5);
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 4rem;
+            max-width: 1000px;
+        }
+        .feature {
+            background: rgba(30, 41, 59, 0.7);
+            padding: 2rem;
+            border-radius: 1rem;
+            border: 1px solid #334155;
+        }
+        .feature h3 {
+            color: #60a5fa;
+            margin-bottom: 1rem;
+        }
+        footer {
+            margin-top: 4rem;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="logo">🎬 BossMind</div>
+    <h1>AI Video Maker</h1>
+    <p class="subtitle">
+        Generate professional videos with AI in minutes. No editing skills required.
+        Powered by Stability AI & custom workflows.
+    </p>
+    <a href="#" class="btn">Launch Video Maker (Coming Soon)</a>
+    
+    <div class="features">
+        <div class="feature">
+            <h3>🔄 Text‑to‑Video</h3>
+            <p>Turn scripts into animated videos with AI‑generated visuals and voiceovers.</p>
+        </div>
+        <div class="feature">
+            <h3>🎵 Auto‑Soundtrack</h3>
+            <p>Smart background music and sound effects matched to your content.</p>
+        </div>
+        <div class="feature">
+            <h3>🚀 24/7 Automation</h3>
+            <p>Set it and forget it – generate videos automatically via API.</p>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2025 BossMind.ai | Isolated Project: AI‑Video‑Maker | DB: bossmind_ai_video</p>
+        <p>📍 Part of the BossMind 24/7 Automation Suite</p>
+    </footer>
+</body>
+</html>
