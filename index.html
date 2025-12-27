@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Video Maker | BossMind</title>
+    <title>BossMind Admin Dashboard</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -49,27 +49,60 @@
             transition: transform 0.2s, box-shadow 0.2s;
             text-decoration: none;
             display: inline-block;
+            margin: 0.5rem;
         }
         .btn:hover {
             transform: translateY(-3px);
             box-shadow: 0 10px 25px rgba(59, 130, 246, 0.5);
         }
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            margin-top: 4rem;
-            max-width: 1000px;
+        .btn-secondary {
+            background: #334155;
         }
-        .feature {
+        .btn-secondary:hover {
+            background: #475569;
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+            max-width: 1200px;
+            width: 100%;
+        }
+        .card {
             background: rgba(30, 41, 59, 0.7);
             padding: 2rem;
             border-radius: 1rem;
             border: 1px solid #334155;
+            text-align: left;
         }
-        .feature h3 {
+        .card h3 {
             color: #60a5fa;
             margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+        .card p {
+            color: #cbd5e1;
+            margin-bottom: 1.5rem;
+        }
+        .status {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .status-online {
+            background: #064e3b;
+            color: #6ee7b7;
+        }
+        .status-offline {
+            background: #7f1d1d;
+            color: #fca5a5;
+        }
+        .status-building {
+            background: #78350f;
+            color: #fdba74;
         }
         footer {
             margin-top: 4rem;
@@ -79,32 +112,82 @@
     </style>
 </head>
 <body>
-    <div class="logo">🎬 BossMind</div>
-    <h1>AI Video Maker</h1>
+    <div class="logo">⚡ BossMind Admin</div>
+    <h1>Central Dashboard</h1>
     <p class="subtitle">
-        Generate professional videos with AI in minutes. No editing skills required.
-        Powered by Stability AI & custom workflows.
+        Monitor and control all AI automation projects from one dashboard. 24/7 hands‑free operation.
     </p>
-    <a href="#" class="btn">Launch Video Maker (Coming Soon)</a>
-    
-    <div class="features">
-        <div class="feature">
-            <h3>🔄 Text‑to‑Video</h3>
-            <p>Turn scripts into animated videos with AI‑generated visuals and voiceovers.</p>
+    <div>
+        <a href="https://video.bossmind.ai" target="_blank" class="btn">🎬 AI Video Maker</a>
+        <a href="#" class="btn btn-secondary">⚙️ AI Builder (Soon)</a>
+        <a href="#" class="btn btn-secondary">🛒 E‑Commerce AI (Soon)</a>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="card">
+            <h3>AI Video Maker</h3>
+            <p>Generate videos automatically with AI. Stable Diffusion + GPT‑4 integration.</p>
+            <span class="status status-online">🟢 ONLINE</span>
+            <a href="https://video.bossmind.ai" target="_blank" style="float:right; color:#60a5fa;">Open →</a>
         </div>
-        <div class="feature">
-            <h3>🎵 Auto‑Soundtrack</h3>
-            <p>Smart background music and sound effects matched to your content.</p>
+        <div class="card">
+            <h3>AI Builder</h3>
+            <p>Create custom AI workflows, agents, and automation chains.</p>
+            <span class="status status-building">🟡 BUILDING</span>
         </div>
-        <div class="feature">
-            <h3>🚀 24/7 Automation</h3>
-            <p>Set it and forget it – generate videos automatically via API.</p>
+        <div class="card">
+            <h3>E‑Commerce AI</h3>
+            <p>Automated product generation, store management, and customer AI.</p>
+            <span class="status status-offline">🔴 OFFLINE</span>
+        </div>
+        <div class="card">
+            <h3>System Health</h3>
+            <p><strong>Uptime:</strong> 99.9%<br>
+               <strong>Last checked:</strong> <span id="live-time">--:--:--</span><br>
+               <strong>Automation:</strong> Every 10min
+            </p>
+        </div>
+        <div class="card">
+            <h3>Quick Actions</h3>
+            <p>
+                <button class="btn" style="width:100%; margin:0.3rem 0;">Restart All Services</button>
+                <button class="btn btn-secondary" style="width:100%; margin:0.3rem 0;">View Logs</button>
+                <button class="btn btn-secondary" style="width:100%; margin:0.3rem 0;">Add New Project</button>
+            </p>
+        </div>
+        <div class="card">
+            <h3>Database Status</h3>
+            <p>
+                <strong>bossmind_ai_video:</strong> Connected<br>
+                <strong>bossmind_ai_builder:</strong> Pending<br>
+                <strong>bossmind_ecom:</strong> Not deployed
+            </p>
         </div>
     </div>
 
     <footer>
-        <p>© 2025 BossMind.ai | Isolated Project: AI‑Video‑Maker | DB: bossmind_ai_video</p>
-        <p>📍 Part of the BossMind 24/7 Automation Suite</p>
+        <p>© 2025 BossMind.ai | Isolated Projects Architecture | Powered by Railway + Cloudflare + Stability AI</p>
+        <p>📍 Admin Dashboard v1.0 | <span id="api-status">Checking API...</span></p>
     </footer>
+
+    <script>
+        // Live time
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('live-time').textContent = now.toLocaleTimeString();
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // API check
+        fetch('https://admin.bossmind.ai/api/health')
+            .then(res => res.ok ? res.json() : Promise.reject())
+            .then(data => {
+                document.getElementById('api-status').innerHTML = `<span style="color:#6ee7b7;">API Online</span>`;
+            })
+            .catch(() => {
+                document.getElementById('api-status').innerHTML = `<span style="color:#fca5a5;">API Offline</span>`;
+            });
+    </script>
 </body>
 </html>
