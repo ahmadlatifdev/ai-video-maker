@@ -1,0 +1,28 @@
+name: BossMind 24/7 Auto‑Fix
+on:
+  schedule:
+    - cron: '*/30 * * * *'  # Every 30 minutes
+  push:
+    branches: [ main ]
+
+jobs:
+  auto-fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Remove server.js if static site
+        run: |
+          if [ -f "package.json" ]; then
+            echo '{"name": "ai-video-maker", "version": "1.0.0"}' > package.json
+          fi
+          rm -f server.js 2>/dev/null || true
+
+      - name: Commit fixes
+        run: |
+          git config user.name "BossMind Bot"
+          git config user.email "bot@bossmind.ai"
+          git add .
+          git commit -m "Auto‑fix by BossMind 24/7" || exit 0
+          git push
