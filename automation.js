@@ -1,9 +1,15 @@
 const http = require("http");
+const url = require("url");
 
-const PORT = process.env.PORT || 3000;
+/* ===============================
+   Railway Runtime Configuration
+================================ */
+const PORT = process.env.PORT || 8080;
 const HOST = "0.0.0.0";
 
-// ===== BossMind Runtime State =====
+/* ===============================
+   BossMind Runtime State
+================================ */
 const STATE = {
   app: "ai-video-maker",
   bossmind: true,
@@ -13,42 +19,76 @@ const STATE = {
   lastError: null,
 };
 
-// ===== HTTP SERVER (Railway-compliant) =====
+/* ===============================
+   BossMind Automation Loop
+================================ */
+function runAutomationTick() {
+  try {
+    STATE.tickCount += 1;
+    STATE.lastTickAt = new Date().toISOString();
+    console.log(`🟣 Tick #${STATE.tickCount} { message: 'tick ok' }`);
+  } catch (err) {
+    STATE.lastError = err.message;
+    console.error("Automation error:", err);
+  }
+}
+
+// Run every 30 seconds (safe for Railway)
+setInterval(runAutomationTick, 30_000);
+
+/* ===============================
+   HTTP Server (API + Health)
+================================ */
 const server = http.createServer((req, res) => {
-  if (req.url === "/" || req.url === "/health") {
-    res.writeHead(200, { "Content-Type": "application/json" });
+  const parsedUrl = url.parse(req.url, true);
+  res.setHeader("Content-Type", "application/json");
+
+  /* ---- HEALTH / ROOT ---- */
+  if (parsedUrl.pathname === "/" || parsedUrl.pathname === "/health") {
+    res.writeHead(200);
     return res.end(JSON.stringify({ ok: true, ...STATE }));
   }
 
-  res.writeHead(404, { "Content-Type": "application/json" });
-  res.end(JSON.stringify({ ok: false }));
-});
-
-server.listen(PORT, HOST, () => {
-  console.log("🤖 BossMind 24/7 Automation Started");
-  console.log(`✅ Server listening on ${HOST}:${PORT}`);
-});
-
-// ===== BossMind Automation Loop =====
-async function runAutomationTick() {
-  return { message: "tick ok" };
-}
-
-const TICK_SECONDS = Number(process.env.BOSSMIND_TICK_SECONDS || 30);
-
-async function tick() {
-  STATE.lastTickAt = new Date().toISOString();
-  STATE.tickCount += 1;
-
-  try {
-    await runAutomationTick();
-    STATE.lastError = null;
-    console.log(`🟣 Tick #${STATE.tickCount}`);
-  } catch (err) {
-    STATE.lastError = String(err);
-    console.error("🔴 Tick failed:", err);
+  /* ---- STATUS ---- */
+  if (parsedUrl.pathname === "/status") {
+    res.writeHead(200);
+    return res.end(JSON.stringify(STATE));
   }
-}
 
-tick();
-setInterval(tick, TICK_SECONDS * 1000);
+  /* ---- API: VIDEO GENERATION (placeholder) ---- */
+  if (parsedUrl.pathname === "/api/video/generate" && req.method === "POST") {
+    res.writeHead(200);
+    return res.end(
+      JSON.stringify({
+        ok: true,
+        message: "Video generation endpoint ready",
+        engine: "BossMind",
+        next: "Stability / Runway / Luma",
+      })
+    );
+  }
+
+  /* ---- API: ADMIN ---- */
+  if (parsedUrl.pathname === "/api/admin") {
+    res.writeHead(200);
+    return res.end(
+      JSON.stringify({
+        ok: true,
+        admin: true,
+        automationRunning: true,
+      })
+    );
+  }
+
+  /* ---- NOT FOUND ---- */
+  res.writeHead(404);
+  res.end(JSON.stringify({ ok: false, error: "Not found" }));
+});
+
+/* ===============================
+   Start Server
+================================ */
+server.listen(PORT, HOST, () => {
+  console.log(`✅ Server listening on ${HOST}:${PORT}`);
+  console.log("🤖 BossMind 24/7 Automation Started");
+});
