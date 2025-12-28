@@ -1,6 +1,7 @@
 const http = require("http");
 
 const PORT = process.env.PORT || 3000;
+const HOST = "0.0.0.0";
 
 // ===== BossMind Runtime State =====
 const STATE = {
@@ -12,7 +13,7 @@ const STATE = {
   lastError: null,
 };
 
-// ===== 1) Railway needs an HTTP server listening on PORT =====
+// ===== HTTP SERVER (Railway-compliant) =====
 const server = http.createServer((req, res) => {
   if (req.url === "/" || req.url === "/health") {
     res.writeHead(200, { "Content-Type": "application/json" });
@@ -20,19 +21,16 @@ const server = http.createServer((req, res) => {
   }
 
   res.writeHead(404, { "Content-Type": "application/json" });
-  res.end(JSON.stringify({ ok: false, error: "Not Found" }));
+  res.end(JSON.stringify({ ok: false }));
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, HOST, () => {
   console.log("🤖 BossMind 24/7 Automation Started");
-  console.log(`✅ Server listening on PORT=${PORT}`);
+  console.log(`✅ Server listening on ${HOST}:${PORT}`);
 });
 
-// ===== 2) BossMind automation loop (keeps running) =====
-// Put your real automation steps inside runAutomationTick().
+// ===== BossMind Automation Loop =====
 async function runAutomationTick() {
-  // IMPORTANT: keep this fast and safe; no infinite blocking inside a tick
-  // TODO: add your real automation actions here (API calls, queue processing, etc.)
   return { message: "tick ok" };
 }
 
@@ -43,15 +41,14 @@ async function tick() {
   STATE.tickCount += 1;
 
   try {
-    const result = await runAutomationTick();
+    await runAutomationTick();
     STATE.lastError = null;
-    console.log(`🟣 Tick #${STATE.tickCount}`, result);
+    console.log(`🟣 Tick #${STATE.tickCount}`);
   } catch (err) {
-    STATE.lastError = String(err && err.message ? err.message : err);
-    console.error("🔴 Automation tick failed:", err);
+    STATE.lastError = String(err);
+    console.error("🔴 Tick failed:", err);
   }
 }
 
-// start immediately, then repeat
 tick();
 setInterval(tick, TICK_SECONDS * 1000);
