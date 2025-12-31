@@ -1,60 +1,42 @@
-// ===============================
-// BossMind Automation Server
-// ===============================
-
-const express = require('express');
-const path = require('path');
+const express = require("express");
+const path = require("path");
+const fs = require("fs");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// -------------------------------
-// Middleware
-// -------------------------------
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// -------------------------------
-// Serve static files
-// -------------------------------
-app.use(express.static(path.join(__dirname, 'public')));
+const PUBLIC_DIR = path.join(__dirname, "public");
+app.use(express.static(PUBLIC_DIR));
 
-// -------------------------------
-// Health check (Railway safe)
-// -------------------------------
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    service: 'BossMind Automation',
-    timestamp: new Date().toISOString()
-  });
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", service: "BossMind Automation", port: PORT });
 });
 
-// -------------------------------
-// Debug: list public files
-// -------------------------------
-app.get('/_debug/files', (req, res) => {
-  const fs = require('fs');
-  const publicDir = path.join(__dirname, 'public');
-
+app.get("/_debug/files", (req, res) => {
   try {
-    const files = fs.readdirSync(publicDir);
-    res.json({ public: files });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.json({ public: fs.readdirSync(PUBLIC_DIR) });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 
-// -------------------------------
-// Root fallback
-// -------------------------------
-app.get('/', (req, res) => {
-  res.send('BossMind Automation Server is running');
+// ✅ add /admin -> admin.html
+app.get("/admin", (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "admin.html"));
 });
 
-// -------------------------------
-// Start server
-// -------------------------------
+// ✅ add /automation -> automation.html
+app.get("/automation", (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "automation.html"));
+});
+
+app.get("/", (req, res) => {
+  res.send("BossMind Automation Server is running");
+});
+
 app.listen(PORT, () => {
   console.log(`BossMind Automation running on port ${PORT}`);
 });
