@@ -7,972 +7,1484 @@
 
   <style>
     :root{
-      --bg:#0b0f16;
+      --bg:#070a10;
+      --bg2:#0b1020;
       --panel:#0f1623;
       --panel2:#0c1220;
       --card:#111b2b;
-      --line:rgba(255,255,255,.08);
+      --card2:#0e1526;
+      --line:rgba(255,255,255,.09);
+      --line2:rgba(255,255,255,.06);
       --text:#e7eaf1;
       --muted:#a7b0c0;
+
       --ok:#1ee3a5;
       --warn:#f5c542;
       --bad:#ff4d6d;
-      --brand1:#7c3aed;
-      --brand2:#22c55e;
-      --brand3:#f59e0b;
-      --chip:#121b2a;
-      --shadow: 0 18px 50px rgba(0,0,0,.45);
-      --radius: 16px;
-      --radius2: 22px;
+
+      --p1:#7c3aed;   /* Builder */
+      --p2:#22c55e;   /* Video */
+      --p3:#f59e0b;   /* Stock */
+
+      --shadow: 0 20px 60px rgba(0,0,0,.50);
+      --shadow2: 0 10px 28px rgba(0,0,0,.35);
+      --r16: 16px;
+      --r22: 22px;
     }
 
-    /* ✅ IMPORTANT: No zoom, no transform scale — prevents "tiny centered" layout */
+    /* ✅ No zoom / no transform scale */
     * { box-sizing: border-box; }
-    html,body { height:100%; }
+    html, body { height: 100%; }
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
       color:var(--text);
       background:
-        radial-gradient(1100px 600px at 12% 18%, rgba(124,58,237,.35), transparent 60%),
-        radial-gradient(900px 500px at 88% 20%, rgba(34,197,94,.18), transparent 55%),
-        radial-gradient(900px 700px at 85% 85%, rgba(245,158,11,.16), transparent 60%),
-        linear-gradient(180deg, #070a10, var(--bg));
+        radial-gradient(1100px 600px at 12% 18%, rgba(124,58,237,.32), transparent 60%),
+        radial-gradient(900px 500px at 88% 20%, rgba(34,197,94,.16), transparent 55%),
+        radial-gradient(900px 700px at 85% 85%, rgba(245,158,11,.14), transparent 60%),
+        linear-gradient(180deg, #05070c, var(--bg));
       overflow-x:hidden;
     }
 
-    .wrap{
-      width: min(1320px, calc(100% - 32px));
-      margin: 24px auto 40px;
+    .app{
+      min-height:100%;
+      display:grid;
+      grid-template-columns: 290px 1fr;
+    }
+    @media (max-width: 1100px){
+      .app{ grid-template-columns: 1fr; }
     }
 
-    .topbar{
-      display:flex;
-      gap:16px;
-      align-items:flex-start;
-      justify-content:space-between;
-      padding: 16px 16px 8px;
-      border:1px solid var(--line);
-      background: rgba(15,22,35,.70);
+    /* Sidebar */
+    .side{
+      position: sticky;
+      top:0;
+      height:100vh;
+      padding:16px 14px;
+      border-right: 1px solid var(--line2);
+      background: rgba(10,14,22,.70);
       backdrop-filter: blur(10px);
-      border-radius: var(--radius2);
-      box-shadow: var(--shadow);
+    }
+    @media (max-width: 1100px){
+      .side{
+        position:relative;
+        height:auto;
+        border-right:none;
+        border-bottom:1px solid var(--line2);
+      }
     }
 
     .brand{
       display:flex;
       gap:12px;
       align-items:center;
-      min-width: 280px;
+      padding: 10px 10px 14px;
+      border:1px solid var(--line2);
+      border-radius: var(--r22);
+      background: rgba(15,22,35,.60);
+      box-shadow: var(--shadow2);
     }
     .logo{
-      width:44px;height:44px;border-radius:14px;
+      width:42px; height:42px; border-radius: 14px;
       background: linear-gradient(135deg, rgba(124,58,237,1), rgba(34,197,94,1));
-      box-shadow: 0 10px 30px rgba(124,58,237,.25);
+      box-shadow: 0 14px 34px rgba(124,58,237,.22);
+      flex:0 0 auto;
     }
-    .title{
-      display:flex;flex-direction:column;gap:2px;
-    }
-    .title h1{
+    .brand h1{
       margin:0;
-      font-size: 16px;
-      font-weight: 750;
-      letter-spacing: .2px;
+      font-size: 14px;
+      font-weight: 850;
+      letter-spacing:.2px;
+      line-height:1.15;
     }
-    .title p{
-      margin:0;
-      font-size: 12px;
+    .brand p{
+      margin:4px 0 0;
+      font-size: 11px;
       color: var(--muted);
-      opacity:.95;
+      line-height:1.25;
     }
 
-    .actions{
+    .sideBlock{
+      margin-top: 14px;
+      border:1px solid var(--line2);
+      border-radius: var(--r22);
+      background: rgba(15,22,35,.52);
+      box-shadow: var(--shadow2);
+      overflow:hidden;
+    }
+    .sideHead{
+      padding: 12px 12px 10px;
+      border-bottom:1px solid var(--line2);
+      background: rgba(12,18,32,.28);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .sideHead .t{
+      font-size: 12px;
+      font-weight: 850;
+      color: rgba(231,234,241,.96);
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(17,27,43,.55);
+      font-size: 11px;
+      font-weight: 800;
+      color: rgba(231,234,241,.92);
+      white-space:nowrap;
+    }
+    .dot{ width:8px;height:8px;border-radius:99px; background: var(--bad); }
+
+    .sideNav{
+      padding: 10px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .navBtn{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(12,18,32,.34);
+      color: var(--text);
+      cursor:pointer;
+      font-weight: 850;
+      font-size: 12px;
+      transition: transform .12s ease, background .12s ease, border-color .12s ease;
+      user-select:none;
+    }
+    .navBtn:hover{ transform: translateY(-1px); background: rgba(18,27,42,.46); border-color: rgba(255,255,255,.14); }
+    .navBtn.active{
+      background: rgba(124,58,237,.18);
+      border-color: rgba(124,58,237,.38);
+      box-shadow: 0 14px 30px rgba(124,58,237,.10);
+    }
+    .badge{
+      font-size: 10px;
+      font-weight: 900;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(8,12,18,.55);
+      color: rgba(231,234,241,.88);
+      white-space:nowrap;
+    }
+    .badge.p1{ border-color: rgba(124,58,237,.35); background: rgba(124,58,237,.12); }
+    .badge.p2{ border-color: rgba(34,197,94,.30); background: rgba(34,197,94,.10); }
+    .badge.p3{ border-color: rgba(245,158,11,.30); background: rgba(245,158,11,.10); }
+
+    /* Main */
+    .main{
+      padding: 16px;
+    }
+
+    .topbar{
+      border:1px solid var(--line2);
+      background: rgba(15,22,35,.62);
+      backdrop-filter: blur(10px);
+      border-radius: var(--r22);
+      box-shadow: var(--shadow);
+      padding: 14px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .topLeft{
+      display:flex;
+      flex-direction:column;
+      gap:5px;
+      min-width: 260px;
+    }
+    .topLeft .h{
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing:.2px;
+    }
+    .topLeft .s{
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .topRight{
       display:flex;
       gap:10px;
-      flex-wrap: wrap;
+      flex-wrap:wrap;
+      align-items:center;
       justify-content:flex-end;
-      padding-top: 2px;
     }
-
     .btn{
       display:inline-flex;
-      gap:8px;
       align-items:center;
       justify-content:center;
-      border: 1px solid var(--line);
-      background: rgba(17,27,43,.72);
-      color: var(--text);
+      gap:8px;
       padding: 10px 12px;
       border-radius: 999px;
-      font-weight: 650;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(17,27,43,.62);
+      color: var(--text);
+      font-weight: 900;
       font-size: 12px;
       cursor:pointer;
       user-select:none;
       transition: transform .12s ease, background .12s ease, border-color .12s ease;
       white-space:nowrap;
     }
-    .btn:hover{ transform: translateY(-1px); background: rgba(20,33,54,.78); border-color: rgba(255,255,255,.14); }
+    .btn:hover{ transform: translateY(-1px); background: rgba(20,33,54,.72); border-color: rgba(255,255,255,.16); }
     .btn:active{ transform: translateY(0px); }
-    .btn.purple{ background: rgba(124,58,237,.18); border-color: rgba(124,58,237,.35); }
-    .btn.green{ background: rgba(34,197,94,.14); border-color: rgba(34,197,94,.30); }
-    .btn.gold{ background: rgba(245,158,11,.14); border-color: rgba(245,158,11,.30); }
+    .btn.purple{ background: rgba(124,58,237,.16); border-color: rgba(124,58,237,.34); }
+    .btn.green{ background: rgba(34,197,94,.12); border-color: rgba(34,197,94,.30); }
+    .btn.gold{ background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.30); }
     .btn.ghost{ background: rgba(17,27,43,.40); }
 
-    .row{
-      display:grid;
-      grid-template-columns: 1.25fr .95fr;
-      gap: 16px;
+    .grid{
       margin-top: 14px;
+      display:grid;
+      grid-template-columns: 1.2fr .9fr;
+      gap: 14px;
     }
     @media (max-width: 1100px){
-      .row{ grid-template-columns: 1fr; }
-      .actions{ justify-content:flex-start; }
+      .grid{ grid-template-columns: 1fr; }
     }
 
-    .tabs{
+    .card{
+      border:1px solid var(--line2);
+      background: rgba(15,22,35,.58);
+      border-radius: var(--r22);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .cardHead{
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line2);
+      background: rgba(12,18,32,.28);
       display:flex;
+      align-items:center;
+      justify-content:space-between;
       gap:10px;
-      padding: 10px 12px 14px;
       flex-wrap:wrap;
-      align-items:center;
     }
-    .tab{
-      display:inline-flex;
-      align-items:center;
-      gap:10px;
-      padding: 9px 12px;
-      border-radius: 999px;
-      border:1px solid var(--line);
-      background: rgba(17,27,43,.55);
-      color: var(--text);
-      cursor:pointer;
-      font-weight: 700;
+    .cardHead .t{
       font-size: 12px;
-      transition: background .12s ease, border-color .12s ease;
+      font-weight: 950;
+      letter-spacing:.2px;
     }
-    .tab:hover{ background: rgba(20,33,54,.70); border-color: rgba(255,255,255,.14); }
-    .tab.active{
-      background: rgba(124,58,237,.22);
-      border-color: rgba(124,58,237,.40);
-      box-shadow: 0 10px 28px rgba(124,58,237,.12);
+    .cardHead .m{
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 750;
+      margin-top: 2px;
     }
+    .cardBody{
+      padding: 14px;
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+    }
+    .box{
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(12,18,32,.36);
+      border-radius: var(--r16);
+      padding: 12px;
+    }
+
+    .row2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 720px){
+      .row2{ grid-template-columns: 1fr; }
+    }
+
+    label{
+      display:block;
+      font-size: 11px;
+      color: rgba(167,176,192,.92);
+      font-weight: 900;
+      margin-bottom: 7px;
+    }
+    .input, .select, textarea{
+      width:100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(8,12,18,.62);
+      color: var(--text);
+      outline:none;
+      font-weight: 800;
+      font-size: 12px;
+    }
+    textarea{ min-height: 92px; resize: vertical; }
+    .hint{
+      margin-top: 8px;
+      font-size: 11px;
+      color: rgba(167,176,192,.82);
+      line-height: 1.35;
+    }
+
     .pill{
       display:inline-flex;
       align-items:center;
       gap:8px;
       padding: 8px 10px;
       border-radius: 999px;
-      border: 1px solid var(--line);
-      background: rgba(17,27,43,.55);
-      font-size: 12px;
-      color: var(--muted);
-      margin-left:auto;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(17,27,43,.50);
+      font-size: 11px;
+      font-weight: 900;
+      color: rgba(231,234,241,.92);
       white-space:nowrap;
     }
-    .dot{
-      width:9px;height:9px;border-radius:99px;
-      background: var(--bad);
-      box-shadow: 0 0 0 3px rgba(255,77,109,.12);
-    }
+    .pill.ok .dot{ background: var(--ok); }
+    .pill.warn .dot{ background: var(--warn); }
+    .pill.bad .dot{ background: var(--bad); }
 
-    .card{
-      border:1px solid var(--line);
-      background: rgba(15,22,35,.65);
-      backdrop-filter: blur(10px);
-      border-radius: var(--radius2);
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
-    .cardHeader{
-      padding: 14px 14px 10px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 12px;
-      border-bottom: 1px solid rgba(255,255,255,.06);
-      background: rgba(12,18,32,.25);
-    }
-    .cardHeader h2{
-      margin:0;
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: .2px;
-    }
-    .sub{
-      margin:0;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    .section{
-      padding: 14px;
-      display:flex;
-      flex-direction:column;
-      gap: 12px;
-    }
-    .grid2{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-    @media (max-width: 680px){
-      .grid2{ grid-template-columns: 1fr; }
-      .pill{ margin-left:0; width: fit-content; }
-    }
-
-    .box{
-      border:1px solid rgba(255,255,255,.08);
-      background: rgba(12,18,32,.42);
-      border-radius: var(--radius);
-      padding: 12px;
-    }
-
-    label{
-      font-size: 12px;
-      font-weight: 750;
-      color: var(--muted);
-      display:block;
-      margin-bottom: 6px;
-    }
-    .input{
-      width:100%;
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(8,12,18,.65);
-      color: var(--text);
-      outline:none;
-      font-weight: 650;
-      font-size: 12px;
-    }
-    .hint{
-      margin-top: 8px;
-      font-size: 11px;
-      color: rgba(167,176,192,.85);
-      line-height: 1.35;
-    }
-
-    .btnRow{
-      display:flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 10px;
-    }
-
-    .taskRow{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-    }
+    .btnRow{ display:flex; gap:10px; flex-wrap:wrap; }
 
     .table{
       width:100%;
       border-collapse: collapse;
-      overflow:hidden;
-      border-radius: 14px;
       border:1px solid rgba(255,255,255,.08);
-      background: rgba(8,12,18,.45);
+      border-radius: 14px;
+      overflow:hidden;
+      background: rgba(8,12,18,.46);
     }
     .table th, .table td{
-      padding: 10px 10px;
-      text-align:left;
-      font-size: 12px;
+      padding: 10px;
       border-bottom: 1px solid rgba(255,255,255,.06);
-    }
-    .table th{
-      color: var(--muted);
+      font-size: 12px;
       font-weight: 800;
-      background: rgba(12,18,32,.35);
+      text-align:left;
     }
-    .table td{
-      color: rgba(231,234,241,.92);
-      font-weight: 650;
-    }
+    .table th{ color: var(--muted); background: rgba(12,18,32,.30); font-weight: 950; }
     .table tr:last-child td{ border-bottom:none; }
+    .muted{ color: var(--muted); }
 
-    .rightTop{
+    .switchGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 720px){
+      .switchGrid{ grid-template-columns: 1fr; }
+    }
+    .toggle{
       display:flex;
       align-items:center;
+      justify-content:space-between;
       gap:10px;
-    }
-
-    .select{
-      width:100%;
       padding: 10px 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(8,12,18,.65);
-      color: var(--text);
-      outline:none;
-      font-weight: 750;
-      font-size: 12px;
-    }
-
-    .logBox{
-      height: 220px;
       border-radius: 14px;
       border:1px solid rgba(255,255,255,.08);
-      background: rgba(8,12,18,.52);
-      padding: 10px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size: 11px;
-      overflow:auto;
-      color: rgba(231,234,241,.88);
-      line-height: 1.35;
-      white-space: pre-wrap;
+      background: rgba(8,12,18,.40);
     }
-
-    .muted{ color: var(--muted); }
-    .kpi{
-      display:flex; gap:10px; flex-wrap:wrap;
+    .toggle .k{
+      font-size: 12px;
+      font-weight: 950;
     }
-    .chip{
+    .toggle .v{
       display:inline-flex;
       align-items:center;
       gap:8px;
-      padding: 8px 10px;
+      padding: 7px 10px;
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.08);
-      background: rgba(18,27,42,.55);
-      font-size: 12px;
-      font-weight: 750;
-      color: rgba(231,234,241,.92);
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(17,27,43,.55);
+      font-size: 11px;
+      font-weight: 950;
+      cursor:pointer;
+      user-select:none;
       white-space:nowrap;
     }
-    .chip .dot{ width:8px;height:8px; box-shadow:none; }
-    .chip.ok .dot{ background: var(--ok); }
-    .chip.warn .dot{ background: var(--warn); }
-    .chip.bad .dot{ background: var(--bad); }
+    .v.on{ border-color: rgba(30,227,165,.32); background: rgba(30,227,165,.10); }
+    .v.off{ border-color: rgba(255,77,109,.28); background: rgba(255,77,109,.08); }
 
-    .footerNote{
-      margin-top: 12px;
+    .logBox{
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(8,12,18,.52);
+      border-radius: 14px;
+      padding: 10px;
+      height: 260px;
+      overflow:auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
       font-size: 11px;
-      color: rgba(167,176,192,.8);
+      line-height: 1.35;
+      white-space: pre-wrap;
+      color: rgba(231,234,241,.88);
     }
 
-    /* Panels */
-    .panel{ display:none; }
-    .panel.active{ display:block; }
+    .sep{
+      height:1px;
+      background: rgba(255,255,255,.06);
+      margin: 2px 0;
+    }
+
+    .hide{ display:none !important; }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="topbar">
+  <div class="app">
+    <!-- SIDEBAR -->
+    <aside class="side">
       <div class="brand">
         <div class="logo" aria-hidden="true"></div>
-        <div class="title">
-          <h1>BossMind Admin — Automation Center</h1>
-          <p>3 Projects • Queue • Switches • Jobs • Logs • Health</p>
+        <div>
+          <h1>BossMind Admin</h1>
+          <p>Automation • Switches • Jobs • Queue • Logs</p>
         </div>
       </div>
 
-      <div class="actions">
-        <button class="btn purple" id="btnRefreshAll">↻ Refresh All</button>
-        <button class="btn green" id="btnHealth">✓ Run Health Check</button>
-        <button class="btn gold" id="btnSyncAll">⇄ Sync (Sheet / DB / Config)</button>
-      </div>
-    </div>
-
-    <!-- ✅ TABS: Project 3 aligned exactly like 1 & 2 -->
-    <div class="tabs">
-      <button class="tab active" data-tab="p1" id="tabP1">Project 1 — AI Builder</button>
-      <button class="tab" data-tab="p2" id="tabP2">Project 2 — AI Video Generator</button>
-      <button class="tab" data-tab="p3" id="tabP3">Project 3 — AI Stock System</button>
-
-      <div class="pill" title="UI status only. Backend status depends on API Base URL.">
-        <span class="dot" id="backendDot"></span>
-        <span id="backendText">Backend: down</span>
-        <span style="opacity:.55">•</span>
-        <span id="clockText"></span>
-      </div>
-    </div>
-
-    <div class="row">
-      <!-- LEFT: Project panel -->
-      <div class="card">
-        <div class="cardHeader">
-          <div>
-            <h2 id="panelTitle">Project 1 — AI Builder</h2>
-            <p class="sub" id="panelSub">Core tasks, status snapshot, and connection</p>
+      <div class="sideBlock">
+        <div class="sideHead">
+          <div class="t">System Status</div>
+          <div class="chip" title="Backend status depends on your API Base URL">
+            <span class="dot" id="sbDot"></span>
+            <span id="sbText">Backend: down</span>
           </div>
         </div>
+        <div class="sideNav">
+          <button class="navBtn active" data-view="overview">
+            <span>Command Center</span>
+            <span class="badge">Global</span>
+          </button>
+          <button class="navBtn" data-view="builder">
+            <span>AI Builder</span>
+            <span class="badge p1">Project 1</span>
+          </button>
+          <button class="navBtn" data-view="video">
+            <span>AI Video Generator</span>
+            <span class="badge p2">Project 2</span>
+          </button>
+          <button class="navBtn" data-view="stock">
+            <span>AI Stock System</span>
+            <span class="badge p3">Project 3</span>
+          </button>
+          <button class="navBtn" data-view="logs">
+            <span>Logs & Audit</span>
+            <span class="badge">Ops</span>
+          </button>
+        </div>
+      </div>
 
-        <div class="section">
-          <div class="box">
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-              <div>
-                <div style="font-weight:850; font-size:12px; margin-bottom:4px;">Connection</div>
-                <div class="muted" style="font-size:11px;">Set the API base URL used for all actions in this dashboard.</div>
-              </div>
-              <div class="kpi">
-                <span class="chip bad"><span class="dot"></span><span id="chipApi">API: not set</span></span>
-              </div>
+      <div class="sideBlock">
+        <div class="sideHead">
+          <div class="t">Quick Actions</div>
+          <div class="chip">
+            <span class="dot" style="background:var(--warn)"></span>
+            <span id="clock">—</span>
+          </div>
+        </div>
+        <div class="sideNav">
+          <button class="btn purple" id="qaRefresh">↻ Refresh UI</button>
+          <button class="btn green" id="qaHealth">✓ Health Check</button>
+          <button class="btn gold" id="qaSync">⇄ Sync (Sheet/DB/Config)</button>
+          <button class="btn ghost" id="qaAuto">Auto: OFF</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <div class="topbar">
+        <div class="topLeft">
+          <div class="h" id="pageTitle">Command Center</div>
+          <div class="s" id="pageSub">Global settings + cross-project controls</div>
+        </div>
+
+        <div class="topRight">
+          <span class="pill bad" id="apiPill"><span class="dot"></span><span id="apiPillText">API: not set</span></span>
+          <button class="btn ghost" id="btnOpenAdminHtml" title="Open /admin.html">Open admin.html</button>
+          <button class="btn ghost" id="btnOpenAutomationHtml" title="Open /automation.html">Open automation.html</button>
+        </div>
+      </div>
+
+      <div class="grid">
+        <!-- LEFT AREA (dynamic view content) -->
+        <section class="card" id="leftCard">
+          <div class="cardHead">
+            <div>
+              <div class="t" id="leftTitle">Global Connection</div>
+              <div class="m" id="leftMeta">One base URL powers all 3 projects endpoints</div>
             </div>
-
-            <div class="grid2" style="margin-top:12px;">
-              <div>
-                <label for="apiBase">API Base URL (Railway / Production)</label>
-                <input class="input" id="apiBase" placeholder="https://your-service.up.railway.app" />
-                <div class="hint">This page calls your backend endpoints using this base URL.</div>
-              </div>
-              <div>
-                <label for="adminKey">Admin Key (optional)</label>
-                <input class="input" id="adminKey" placeholder="(if your backend requires x-admin-key)" />
-                <div class="hint">If enabled on backend, it will be sent as header <b>x-admin-key</b>.</div>
-              </div>
-            </div>
-
-            <div class="btnRow">
-              <button class="btn purple" id="btnSaveConn">Save</button>
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+              <span class="pill bad" id="backendPill"><span class="dot"></span><span id="backendPillText">Backend: down</span></span>
               <button class="btn ghost" id="btnPing">Ping</button>
             </div>
           </div>
 
-          <!-- PANELS -->
-          <div class="panel active" id="panelP1">
+          <div class="cardBody" id="leftBody">
+            <!-- Connection -->
             <div class="box">
-              <div style="font-weight:850; font-size:12px; margin-bottom:10px;">Core Tasks</div>
-              <div class="taskRow">
-                <button class="btn green" data-job="builder.generatePreview">Generate Preview</button>
-                <button class="btn purple" data-job="builder.exportLayout">Export Layout</button>
-                <button class="btn gold" data-job="builder.syncSupabase">Sync Supabase</button>
-                <button class="btn ghost" data-job="builder.rotateTheme">Rotate Theme</button>
+              <div class="row2">
+                <div>
+                  <label for="apiBase">API Base URL (Railway / Production)</label>
+                  <input class="input" id="apiBase" placeholder="https://your-service.up.railway.app" />
+                  <div class="hint">Used for every action in this dashboard (jobs, switches, logs, status).</div>
+                </div>
+                <div>
+                  <label for="adminKey">Admin Key (optional)</label>
+                  <input class="input" id="adminKey" placeholder="x-admin-key value if your backend requires it" />
+                  <div class="hint">Sent as header <b>x-admin-key</b> on every request.</div>
+                </div>
               </div>
-              <div class="footerNote">Recommended backend endpoint: <b>POST /api/admin/jobs</b> with <b>{ job, scope }</b>.</div>
+              <div class="btnRow" style="margin-top:10px;">
+                <button class="btn purple" id="btnSaveConn">Save Connection</button>
+                <button class="btn green" id="btnRunHealth">Run Health</button>
+              </div>
             </div>
 
+            <!-- Global Switches -->
             <div class="box">
-              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-                <div style="font-weight:850; font-size:12px;">Status Snapshot</div>
-                <button class="btn ghost" id="btnRefreshStatus">Refresh Builder Status</button>
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+                <div style="font-weight:950; font-size:12px;">Global Governance</div>
+                <div class="btnRow">
+                  <button class="btn gold" id="btnApplyMaintenance">Apply Maintenance</button>
+                  <button class="btn ghost" id="btnFetchSwitches">Fetch Switches</button>
+                </div>
               </div>
+
+              <div class="row2" style="margin-top:10px;">
+                <div>
+                  <label for="maintenanceMode">Maintenance Mode</label>
+                  <select class="select" id="maintenanceMode">
+                    <option value="off">OFF</option>
+                    <option value="on">ON</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="featureSet">Feature Switch Set</label>
+                  <select class="select" id="featureSet">
+                    <option value="builder">AI Builder (Project 1)</option>
+                    <option value="video">AI Video Generator (Project 2)</option>
+                    <option value="stock">AI Stock System (Project 3)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="switchGrid" style="margin-top:10px;">
+                <div class="toggle">
+                  <div class="k">DeepSeek Engine</div>
+                  <div class="v off" data-switch="deepseek">OFF</div>
+                </div>
+                <div class="toggle">
+                  <div class="k">Auto-Disable on Errors</div>
+                  <div class="v off" data-switch="autoDisableOnErrors">OFF</div>
+                </div>
+                <div class="toggle">
+                  <div class="k">Backups</div>
+                  <div class="v off" data-switch="backups">OFF</div>
+                </div>
+                <div class="toggle">
+                  <div class="k">Notifications</div>
+                  <div class="v off" data-switch="notifications">OFF</div>
+                </div>
+                <div class="toggle">
+                  <div class="k">Webhook Triggers</div>
+                  <div class="v off" data-switch="webhookTriggers">OFF</div>
+                </div>
+                <div class="toggle">
+                  <div class="k">Stripe Logs</div>
+                  <div class="v off" data-switch="stripeLogs">OFF</div>
+                </div>
+              </div>
+
+              <div class="hint" style="margin-top:10px;">
+                Recommended backend endpoints:<br>
+                <b>GET /api/admin/switches?set=builder|video|stock</b><br>
+                <b>POST /api/admin/switches</b> with <b>{ set, key, action }</b><br>
+                <b>POST /api/admin/maintenance</b> with <b>{ mode }</b>
+              </div>
+            </div>
+
+            <!-- Cross-project job runner -->
+            <div class="box">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+                <div style="font-weight:950; font-size:12px;">Universal Job Runner</div>
+                <span class="pill warn"><span class="dot"></span><span>Safe mode: UI-ready</span></span>
+              </div>
+
+              <div class="row2" style="margin-top:10px;">
+                <div>
+                  <label for="jobScope">Target Project</label>
+                  <select class="select" id="jobScope">
+                    <option value="builder">Project 1 — AI Builder</option>
+                    <option value="video">Project 2 — AI Video Generator</option>
+                    <option value="stock">Project 3 — AI Stock System</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="jobName">Job Name</label>
+                  <input class="input" id="jobName" placeholder="e.g. builder.exportLayout / video.queueFromSheet / stock.runSignals" />
+                </div>
+              </div>
+
               <div style="margin-top:10px;">
-                <table class="table">
-                  <thead>
-                    <tr><th style="width:55%">Item</th><th>Value</th></tr>
-                  </thead>
-                  <tbody>
-                    <tr><td>Last Export</td><td id="s1">—</td></tr>
-                    <tr><td>Supabase Sync</td><td id="s2">—</td></tr>
-                    <tr><td>Active Theme</td><td id="s3">—</td></tr>
-                    <tr><td>Errors (24h)</td><td id="s4">—</td></tr>
-                  </tbody>
-                </table>
+                <label for="jobPayload">Job Payload (JSON)</label>
+                <textarea id="jobPayload" class="input" placeholder='{"note":"optional","priority":"normal"}'></textarea>
+                <div class="hint">Sent to <b>POST /api/admin/jobs</b> as <b>{ job, scope, payload }</b>.</div>
               </div>
-              <div class="footerNote">Endpoint expected: <b>GET /api/admin/status/builder</b></div>
+
+              <div class="btnRow" style="margin-top:10px;">
+                <button class="btn purple" id="btnRunJob">Run Job</button>
+                <button class="btn ghost" id="btnFillPayload">Fill Default Payload</button>
+              </div>
             </div>
           </div>
+        </section>
 
-          <div class="panel" id="panelP2">
-            <div class="box">
-              <div style="font-weight:850; font-size:12px; margin-bottom:10px;">Video Generator Tasks</div>
-              <div class="taskRow">
-                <button class="btn green" data-job="video.queueFromSheet">Queue from Google Sheet</button>
-                <button class="btn purple" data-job="video.reviewScenario">Scenario Review</button>
-                <button class="btn gold" data-job="video.renderNext">Render Next</button>
-                <button class="btn ghost" data-job="video.publish">Publish (YouTube/TikTok)</button>
-              </div>
-              <div class="footerNote">Recommended backend endpoint: <b>POST /api/admin/jobs</b> with <b>{ job, scope }</b>.</div>
+        <!-- RIGHT AREA (logs + status) -->
+        <section class="card" id="rightCard">
+          <div class="cardHead">
+            <div>
+              <div class="t">Operations Console</div>
+              <div class="m">Status • logs • quick verification</div>
             </div>
-
-            <div class="box">
-              <div style="font-weight:850; font-size:12px; margin-bottom:10px;">Video Type Selector</div>
-              <div class="grid2">
-                <div>
-                  <label for="videoType">Select Video Type</label>
-                  <select class="select" id="videoType">
-                    <option value="funny">Funny</option>
-                    <option value="drama">Drama</option>
-                    <option value="thriller">Thriller</option>
-                    <option value="adventure">Adventure</option>
-                    <option value="educational">Educational</option>
-                    <option value="motivation">Motivation</option>
-                  </select>
-                  <div class="hint">Saved locally. Backend can read it via job payload.</div>
-                </div>
-                <div>
-                  <label for="videoLang">Default Language</label>
-                  <select class="select" id="videoLang">
-                    <option value="auto">Auto (viewer IP)</option>
-                    <option value="ar">Arabic</option>
-                    <option value="en">English</option>
-                    <option value="fr">French</option>
-                    <option value="de">German</option>
-                    <option value="es">Spanish</option>
-                    <option value="ru">Russian</option>
-                    <option value="sq">Albanian</option>
-                  </select>
-                  <div class="hint">Saved locally. Used in job payload if you trigger tasks here.</div>
-                </div>
-              </div>
-
-              <div class="btnRow">
-                <button class="btn purple" id="btnSaveVideoPrefs">Save Video Preferences</button>
-              </div>
-
-              <div class="footerNote">Recommended: <b>POST /api/admin/video/prefs</b> or include prefs in <b>POST /api/admin/jobs</b>.</div>
-            </div>
-          </div>
-
-          <div class="panel" id="panelP3">
-            <div class="box">
-              <div style="font-weight:850; font-size:12px; margin-bottom:10px;">Stock System Tasks (Stock only)</div>
-              <div class="taskRow">
-                <button class="btn green" data-job="stock.syncWatchlist">Sync Watchlist</button>
-                <button class="btn purple" data-job="stock.runSignals">Run AI Signals</button>
-                <button class="btn gold" data-job="stock.riskScan">Run Risk Scan</button>
-                <button class="btn ghost" data-job="stock.exportReport">Export Report</button>
-              </div>
-              <div class="footerNote">Recommended backend endpoint: <b>POST /api/admin/jobs</b> with <b>{ job, scope }</b>.</div>
-            </div>
-
-            <div class="box">
-              <div style="font-weight:850; font-size:12px; margin-bottom:10px;">Stock Snapshot</div>
-              <table class="table">
-                <thead><tr><th style="width:55%">Item</th><th>Value</th></tr></thead>
-                <tbody>
-                  <tr><td>Market Session</td><td id="stk1">—</td></tr>
-                  <tr><td>Signals (today)</td><td id="stk2">—</td></tr>
-                  <tr><td>Risk Level</td><td id="stk3">—</td></tr>
-                  <tr><td>Last Report</td><td id="stk4">—</td></tr>
-                </tbody>
-              </table>
-              <div class="footerNote">Endpoint expected: <b>GET /api/admin/status/stock</b></div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- RIGHT: Controls + Logs -->
-      <div class="card">
-        <div class="cardHeader">
-          <div>
-            <h2>Control + Logs</h2>
-            <p class="sub">Maintenance, switches, job logs, and local controls</p>
-          </div>
-
-          <div class="rightTop">
-            <button class="btn ghost" id="btnLoadLogs">Load Logs</button>
-            <button class="btn ghost" id="btnAutoToggle">Auto: OFF</button>
-          </div>
-        </div>
-
-        <div class="section">
-          <div class="box">
-            <div style="font-weight:850; font-size:12px; margin-bottom:10px;">Maintenance + Switch Control (UI Ready)</div>
-
-            <div class="grid2">
-              <div>
-                <label for="maintenanceMode">Maintenance Mode</label>
-                <select class="select" id="maintenanceMode">
-                  <option value="off">OFF</option>
-                  <option value="on">ON</option>
-                </select>
-              </div>
-              <div>
-                <label for="featureSet">Feature Switch Set</label>
-                <select class="select" id="featureSet">
-                  <option value="builder">AI Builder</option>
-                  <option value="video">AI Video Generator</option>
-                  <option value="stock">AI Stock System</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="grid2" style="margin-top:10px;">
-              <div class="box" style="padding:10px;">
-                <div class="muted" style="font-weight:800; font-size:12px; margin-bottom:8px;">Core Switches</div>
-                <div class="taskRow">
-                  <button class="btn ghost" data-switch="deepseek">DeepSeek</button>
-                  <button class="btn ghost" data-switch="stripeLogs">Stripe Logs</button>
-                  <button class="btn ghost" data-switch="webhookTriggers">Webhook Triggers</button>
-                </div>
-              </div>
-
-              <div class="box" style="padding:10px;">
-                <div class="muted" style="font-weight:800; font-size:12px; margin-bottom:8px;">Safety / Ops</div>
-                <div class="taskRow">
-                  <button class="btn ghost" data-switch="autoDisableOnErrors">Auto-Disable on Errors</button>
-                  <button class="btn ghost" data-switch="backups">Backups</button>
-                  <button class="btn ghost" data-switch="notifications">Notifications</button>
-                </div>
-              </div>
-            </div>
-
-            <div class="btnRow" style="margin-top:10px;">
-              <button class="btn gold" id="btnApplyMaintenance">Apply Maintenance</button>
-              <button class="btn purple" id="btnFetchSwitches">Fetch Switches</button>
-            </div>
-
-            <div class="footerNote">
-              Backend endpoints expected (recommended):<br>
-              <b>GET /api/admin/switches?set=builder|video|stock</b><br>
-              <b>POST /api/admin/switches</b> with <b>{ set, key, action }</b><br>
-              <b>POST /api/admin/maintenance</b> with <b>{ mode }</b>
-            </div>
-          </div>
-
-          <div class="box">
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-              <div style="font-weight:850; font-size:12px;">Logs</div>
-              <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                <label style="margin:0; font-size:12px; font-weight:800; color:var(--muted);">Log Filter</label>
-                <select class="select" id="logFilter" style="width:200px;">
-                  <option value="all">All</option>
-                  <option value="jobs">Jobs</option>
-                  <option value="switches">Switches</option>
-                  <option value="health">Health</option>
-                  <option value="errors">Errors</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="logBox" id="logOutput">Logs will appear here…</div>
-
             <div class="btnRow">
+              <button class="btn ghost" id="btnLoadLogs">Load Logs</button>
               <button class="btn ghost" id="btnClearLogs">Clear</button>
               <button class="btn ghost" id="btnCopyLogs">Copy</button>
             </div>
-
-            <div class="footerNote">Endpoint expected: <b>GET /api/admin/logs?filter=all|jobs|switches|health|errors</b></div>
           </div>
 
-        </div>
+          <div class="cardBody">
+            <div class="box">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+                <div style="font-weight:950; font-size:12px;">Live Status Snapshot</div>
+                <div class="btnRow">
+                  <button class="btn green" id="btnRefreshStatus">Refresh</button>
+                </div>
+              </div>
+              <div class="sep"></div>
+              <table class="table">
+                <thead>
+                  <tr><th style="width:52%">Metric</th><th>Value</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Active View</td><td id="mView">Command Center</td></tr>
+                  <tr><td>API Base</td><td id="mApi">—</td></tr>
+                  <tr><td>Backend</td><td id="mBackend">down</td></tr>
+                  <tr><td>Last Action</td><td id="mLast">—</td></tr>
+                </tbody>
+              </table>
+              <div class="hint" style="margin-top:10px;">
+                Health endpoint: <b>GET /health</b>
+              </div>
+            </div>
+
+            <div class="box">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+                <div style="font-weight:950; font-size:12px;">Logs</div>
+                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                  <label style="margin:0;">Filter</label>
+                  <select class="select" id="logFilter" style="width:200px;">
+                    <option value="all">All</option>
+                    <option value="jobs">Jobs</option>
+                    <option value="switches">Switches</option>
+                    <option value="health">Health</option>
+                    <option value="errors">Errors</option>
+                  </select>
+                </div>
+              </div>
+              <div class="logBox" id="logOut">Logs will appear here…</div>
+              <div class="hint" style="margin-top:10px;">
+                Endpoint expected: <b>GET /api/admin/logs?filter=all|jobs|switches|health|errors</b>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
-    </div>
+
+      <!-- Hidden templates for project views (swapped into #leftBody) -->
+      <template id="tplBuilder">
+        <div class="box">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+            <div>
+              <div style="font-weight:950; font-size:12px;">AI Builder — Core Tasks</div>
+              <div class="hint">Design automation, export, Supabase sync, theme rotation, previews.</div>
+            </div>
+            <span class="pill"><span class="dot" style="background:var(--p1)"></span><span>Project 1</span></span>
+          </div>
+
+          <div class="btnRow" style="margin-top:10px;">
+            <button class="btn green" data-job="builder.generatePreview">Generate Preview</button>
+            <button class="btn purple" data-job="builder.exportLayout">Export Layout</button>
+            <button class="btn gold" data-job="builder.syncSupabase">Sync Supabase</button>
+            <button class="btn ghost" data-job="builder.rotateTheme">Rotate Theme</button>
+            <button class="btn ghost" data-job="builder.auditLayout">Layout Audit</button>
+          </div>
+
+          <div class="hint" style="margin-top:10px;">
+            Recommended: <b>POST /api/admin/jobs</b> with <b>{ job, scope:"builder", payload }</b><br>
+            Status: <b>GET /api/admin/status/builder</b>
+          </div>
+        </div>
+
+        <div class="box">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+            <div style="font-weight:950; font-size:12px;">Builder Settings</div>
+            <button class="btn ghost" id="btnSaveBuilderSettings">Save Settings</button>
+          </div>
+
+          <div class="row2" style="margin-top:10px;">
+            <div>
+              <label for="bThemeMode">Theme Mode</label>
+              <select class="select" id="bThemeMode">
+                <option value="luxury-dark">Luxury Dark</option>
+                <option value="luxury-light">Luxury Light</option>
+                <option value="auto-rotate">Auto Rotate Weekly</option>
+                <option value="manual">Manual Only</option>
+              </select>
+            </div>
+            <div>
+              <label for="bSecurity">Admin Protection</label>
+              <select class="select" id="bSecurity">
+                <option value="admin-only">Admin Only</option>
+                <option value="key-required">Key Required</option>
+                <option value="open-ui">Open UI (not recommended)</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top:10px;">
+            <label for="bNotes">Builder Notes / Rules</label>
+            <textarea id="bNotes" class="input" placeholder="Saved locally. Optional."></textarea>
+          </div>
+        </div>
+      </template>
+
+      <template id="tplVideo">
+        <div class="box">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+            <div>
+              <div style="font-weight:950; font-size:12px;">AI Video Generator — Production Pipeline</div>
+              <div class="hint">Queue → Review → Render → Publish (YouTube/TikTok) → Notify (Telegram).</div>
+            </div>
+            <span class="pill"><span class="dot" style="background:var(--p2)"></span><span>Project 2</span></span>
+          </div>
+
+          <div class="btnRow" style="margin-top:10px;">
+            <button class="btn green" data-job="video.queueFromSheet">Queue from Google Sheet</button>
+            <button class="btn purple" data-job="video.reviewScenario">Scenario Review</button>
+            <button class="btn gold" data-job="video.renderNext">Render Next</button>
+            <button class="btn ghost" data-job="video.publish">Publish</button>
+            <button class="btn ghost" data-job="video.syncSubtitles">Sync Subtitles</button>
+          </div>
+
+          <div class="hint" style="margin-top:10px;">
+            Recommended: <b>POST /api/admin/jobs</b> with <b>{ job, scope:"video", payload }</b><br>
+            Queue: <b>GET /api/admin/queue/video</b> (optional)
+          </div>
+        </div>
+
+        <div class="box">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+            <div style="font-weight:950; font-size:12px;">Video Settings</div>
+            <button class="btn ghost" id="btnSaveVideoSettings">Save Settings</button>
+          </div>
+
+          <div class="row2" style="margin-top:10px;">
+            <div>
+              <label for="vType">Default Video Type</label>
+              <select class="select" id="vType">
+                <option value="funny">Funny</option>
+                <option value="drama">Drama</option>
+                <option value="thriller">Thriller</option>
+                <option value="adventure">Adventure</option>
+                <option value="educational">Educational</option>
+                <option value="motivation">Motivation</option>
+              </select>
+            </div>
+            <div>
+              <label for="vLang">Default Language</label>
+              <select class="select" id="vLang">
+                <option value="auto">Auto (viewer IP)</option>
+                <option value="ar">Arabic</option>
+                <option value="en">English</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+                <option value="es">Spanish</option>
+                <option value="ru">Russian</option>
+                <option value="sq">Albanian</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row2" style="margin-top:10px;">
+            <div>
+              <label for="vLen">Target Video Length</label>
+              <select class="select" id="vLen">
+                <option value="10-12">10–12 minutes</option>
+                <option value="shorts">Shorts (Auto)</option>
+                <option value="custom">Custom</option>
+              </select>
+            </div>
+            <div>
+              <label for="vNotify">Publish Notifications</label>
+              <select class="select" id="vNotify">
+                <option value="telegram">Telegram TXT</option>
+                <option value="sms">SMS TXT</option>
+                <option value="off">OFF</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top:10px;">
+            <label for="vSheet">Google Sheet URL (Queue)</label>
+            <input class="input" id="vSheet" placeholder="https://docs.google.com/spreadsheets/d/..." />
+          </div>
+
+          <div class="hint" style="margin-top:10px;">
+            These are saved locally for UI. Backend can optionally read them via job payload.
+          </div>
+        </div>
+      </template>
+
+      <template id="tplStock">
+        <div class="box">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+            <div>
+              <div style="font-weight:950; font-size:12px;">AI Stock System — Controls</div>
+              <div class="hint">Watchlist → Signals → Risk Scan → Reports. (Stock only)</div>
+            </div>
+            <span class="pill"><span class="dot" style="background:var(--p3)"></span><span>Project 3</span></span>
+          </div>
+
+          <div class="btnRow" style="margin-top:10px;">
+            <button class="btn green" data-job="stock.syncWatchlist">Sync Watchlist</button>
+            <button class="btn purple" data-job="stock.runSignals">Run AI Signals</button>
+            <button class="btn gold" data-job="stock.riskScan">Run Risk Scan</button>
+            <button class="btn ghost" data-job="stock.exportReport">Export Report</button>
+            <button class="btn ghost" data-job="stock.taxSnapshot">Tax Snapshot</button>
+          </div>
+
+          <div class="hint" style="margin-top:10px;">
+            Recommended: <b>POST /api/admin/jobs</b> with <b>{ job, scope:"stock", payload }</b><br>
+            Status: <b>GET /api/admin/status/stock</b>
+          </div>
+        </div>
+
+        <div class="box">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+            <div style="font-weight:950; font-size:12px;">Stock Settings</div>
+            <button class="btn ghost" id="btnSaveStockSettings">Save Settings</button>
+          </div>
+
+          <div class="row2" style="margin-top:10px;">
+            <div>
+              <label for="sMarket">Preferred Market</label>
+              <select class="select" id="sMarket">
+                <option value="nasdaq">NASDAQ</option>
+                <option value="nyse">NYSE</option>
+                <option value="tsx">TSX</option>
+                <option value="global">Global</option>
+              </select>
+            </div>
+            <div>
+              <label for="sMode">Risk Mode</label>
+              <select class="select" id="sMode">
+                <option value="conservative">Conservative</option>
+                <option value="balanced">Balanced</option>
+                <option value="aggressive">Aggressive</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top:10px;">
+            <label for="sWatch">Watchlist (comma-separated tickers)</label>
+            <input class="input" id="sWatch" placeholder="AAPL, MSFT, NVDA" />
+            <div class="hint">Saved locally. Backend can fetch/watchlist via your own endpoint later.</div>
+          </div>
+
+          <div style="margin-top:10px;">
+            <label for="sNotes">Compliance / Tax Notes</label>
+            <textarea id="sNotes" class="input" placeholder="Saved locally. Optional."></textarea>
+          </div>
+        </div>
+      </template>
+
+      <template id="tplLogs">
+        <div class="box">
+          <div style="font-weight:950; font-size:12px;">Audit & Trace</div>
+          <div class="hint">Use this to confirm actions and capture a clean operational trail.</div>
+          <div class="btnRow" style="margin-top:10px;">
+            <button class="btn ghost" id="btnLoadLogs2">Load Logs</button>
+            <button class="btn ghost" id="btnExportLocal">Export Local Settings</button>
+            <button class="btn ghost" id="btnResetLocal">Reset Local Settings</button>
+          </div>
+          <div class="hint" style="margin-top:10px;">
+            Export includes: connection + project settings + UI switches.
+          </div>
+        </div>
+
+        <div class="box">
+          <div style="font-weight:950; font-size:12px;">Local Snapshot</div>
+          <table class="table" style="margin-top:10px;">
+            <thead><tr><th style="width:52%">Key</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr><td>Connection</td><td id="lsConn">—</td></tr>
+              <tr><td>Builder</td><td id="lsB">—</td></tr>
+              <tr><td>Video</td><td id="lsV">—</td></tr>
+              <tr><td>Stock</td><td id="lsS">—</td></tr>
+              <tr><td>Switches</td><td id="lsSw">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </template>
+
+      <script>
+        // ==========================
+        // BossMind Advanced Admin UI
+        // ==========================
+
+        const LS = {
+          apiBase: "bm_api_base",
+          adminKey: "bm_admin_key",
+          autoMode: "bm_auto_mode",
+          view: "bm_active_view",
+
+          builder: "bm_builder_settings",
+          video: "bm_video_settings",
+          stock: "bm_stock_settings",
+
+          switches: "bm_switches_state",
+          last: "bm_last_action"
+        };
+
+        const $ = (id) => document.getElementById(id);
+
+        const state = {
+          view: localStorage.getItem(LS.view) || "overview",
+          switches: safeJson(localStorage.getItem(LS.switches), {
+            deepseek:false,
+            autoDisableOnErrors:false,
+            backups:false,
+            notifications:false,
+            webhookTriggers:false,
+            stripeLogs:false
+          })
+        };
+
+        function safeJson(txt, fallback){
+          try { return txt ? JSON.parse(txt) : fallback; }
+          catch { return fallback; }
+        }
+
+        function nowStr(){
+          return new Date().toLocaleString();
+        }
+
+        function log(line){
+          const out = $("logOut");
+          const ts = new Date().toISOString().replace("T"," ").replace("Z","");
+          if(out.textContent.trim() === "Logs will appear here…") out.textContent = "";
+          out.textContent += `[${ts}] ${line}\n`;
+          out.scrollTop = out.scrollHeight;
+          localStorage.setItem(LS.last, line);
+          $("mLast").textContent = line;
+        }
+
+        function setBackendUI(isUp){
+          const dotA = $("sbDot");
+          const txtA = $("sbText");
+          const dotB = $("backendPill").querySelector(".dot");
+          const txtB = $("backendPillText");
+          const pill = $("backendPill");
+
+          const dotC = $("apiPill").querySelector(".dot");
+          const apiBase = getApiBase();
+
+          if(apiBase){
+            $("apiPill").classList.remove("bad");
+            $("apiPill").classList.add("ok");
+            $("apiPillText").textContent = "API: set";
+            $("mApi").textContent = apiBase;
+          } else {
+            $("apiPill").classList.remove("ok");
+            $("apiPill").classList.add("bad");
+            $("apiPillText").textContent = "API: not set";
+            $("mApi").textContent = "—";
+          }
+
+          if(isUp){
+            dotA.style.background = "var(--ok)";
+            txtA.textContent = "Backend: up";
+            pill.classList.remove("bad");
+            pill.classList.add("ok");
+            dotB.style.background = "var(--ok)";
+            txtB.textContent = "Backend: up";
+            $("mBackend").textContent = "up";
+            dotC.style.background = "var(--ok)";
+          }else{
+            dotA.style.background = "var(--bad)";
+            txtA.textContent = "Backend: down";
+            pill.classList.remove("ok");
+            pill.classList.add("bad");
+            dotB.style.background = "var(--bad)";
+            txtB.textContent = "Backend: down";
+            $("mBackend").textContent = "down";
+            dotC.style.background = apiBase ? "var(--warn)" : "var(--bad)";
+          }
+        }
+
+        function getApiBase(){ return (localStorage.getItem(LS.apiBase) || "").trim(); }
+        function getAdminKey(){ return (localStorage.getItem(LS.adminKey) || "").trim(); }
+
+        function headers(){
+          const h = { "Content-Type":"application/json" };
+          const key = getAdminKey();
+          if(key) h["x-admin-key"] = key;
+          return h;
+        }
+
+        async function safeFetch(url, opts={}){
+          try{
+            const res = await fetch(url, opts);
+            const text = await res.text();
+            let json = null;
+            try{ json = JSON.parse(text); }catch{}
+            return { ok: res.ok, status: res.status, text, json };
+          }catch(err){
+            return { ok:false, status:0, text:String(err), json:null };
+          }
+        }
+
+        // ===== View swapping =====
+        function setView(view){
+          state.view = view;
+          localStorage.setItem(LS.view, view);
+
+          document.querySelectorAll(".navBtn").forEach(b=>{
+            b.classList.toggle("active", b.getAttribute("data-view") === view);
+          });
+
+          const leftTitle = $("leftTitle");
+          const leftMeta  = $("leftMeta");
+          const leftBody  = $("leftBody");
+
+          // default: overview content is already in DOM
+          if(view === "overview"){
+            $("pageTitle").textContent = "Command Center";
+            $("pageSub").textContent = "Global settings + cross-project controls";
+            leftTitle.textContent = "Global Connection";
+            leftMeta.textContent = "One base URL powers all 3 projects endpoints";
+            // restore overview DOM by reloading the page section from a cached HTML snapshot
+            leftBody.innerHTML = window.__OVERVIEW_HTML;
+            wireOverview();
+            $("mView").textContent = "Command Center";
+            log("Switched to Command Center");
+            return;
+          }
+
+          const map = {
+            builder: { title:"AI Builder", sub:"Project 1 settings + tasks", tpl:"tplBuilder", ltitle:"AI Builder Console", lmeta:"Tasks + settings for Project 1" },
+            video:   { title:"AI Video Generator", sub:"Project 2 settings + pipeline", tpl:"tplVideo", ltitle:"AI Video Generator Console", lmeta:"Queue + type/language + publish flow" },
+            stock:   { title:"AI Stock System", sub:"Project 3 settings + operations", tpl:"tplStock", ltitle:"AI Stock System Console", lmeta:"Signals + risk + reporting" },
+            logs:    { title:"Logs & Audit", sub:"Operational trace and local snapshot", tpl:"tplLogs", ltitle:"Logs & Audit", lmeta:"Audit trail + export/reset local settings" }
+          };
+
+          const cfg = map[view];
+          $("pageTitle").textContent = cfg.title;
+          $("pageSub").textContent = cfg.sub;
+          leftTitle.textContent = cfg.ltitle;
+          leftMeta.textContent = cfg.lmeta;
+
+          const tpl = document.getElementById(cfg.tpl);
+          leftBody.innerHTML = "";
+          leftBody.appendChild(tpl.content.cloneNode(true));
+
+          // wire common job buttons
+          wireJobButtons(view);
+          wireProjectSettings(view);
+          if(view === "logs") wireLogsTools();
+
+          $("mView").textContent = cfg.title;
+          log(`Switched to ${cfg.title}`);
+        }
+
+        // ===== Jobs =====
+        function currentScopeFromView(view){
+          if(view === "builder") return "builder";
+          if(view === "video") return "video";
+          if(view === "stock") return "stock";
+          return ($("jobScope") ? $("jobScope").value : "builder");
+        }
+
+        async function triggerJob(job, scope, payload){
+          const base = getApiBase();
+          if(!base){ setBackendUI(false); log("Blocked: API Base URL not set."); return; }
+
+          const body = { job, scope, payload: payload || {} };
+
+          // attach video prefs if scope video
+          if(scope === "video"){
+            const v = safeJson(localStorage.getItem(LS.video), {});
+            body.payload.videoType = v.type || "funny";
+            body.payload.videoLang = v.lang || "auto";
+            body.payload.videoLen  = v.len  || "10-12";
+          }
+
+          log(`Job → ${job} (scope=${scope})`);
+          const r = await safeFetch(`${base.replace(/\/$/,"")}/api/admin/jobs`, {
+            method:"POST",
+            headers: headers(),
+            body: JSON.stringify(body)
+          });
+
+          if(r.ok){
+            setBackendUI(true);
+            log(`Job accepted: ${job}`);
+          }else{
+            setBackendUI(false);
+            log(`Job failed (${r.status}): ${r.text.slice(0,240)}`);
+          }
+        }
+
+        function wireJobButtons(view){
+          document.querySelectorAll("[data-job]").forEach(btn=>{
+            btn.addEventListener("click", ()=>{
+              const job = btn.getAttribute("data-job");
+              const scope = currentScopeFromView(view);
+              triggerJob(job, scope, {});
+            });
+          });
+        }
+
+        // ===== Overview wiring (buttons exist only in overview HTML) =====
+        function wireOverview(){
+          // connection
+          $("apiBase").value = getApiBase();
+          $("adminKey").value = getAdminKey();
+
+          $("btnSaveConn").onclick = () => {
+            localStorage.setItem(LS.apiBase, $("apiBase").value.trim());
+            localStorage.setItem(LS.adminKey, $("adminKey").value.trim());
+            refreshMetrics();
+            log("Connection saved.");
+          };
+
+          $("btnRunHealth").onclick = () => runHealth();
+          $("btnPing").onclick = () => runHealth(true);
+
+          // switches
+          document.querySelectorAll("[data-switch]").forEach(elm=>{
+            elm.onclick = () => toggleSwitch(elm.getAttribute("data-switch"), elm);
+            paintSwitch(elm, state.switches[elm.getAttribute("data-switch")] === true);
+          });
+
+          $("btnApplyMaintenance").onclick = () => applyMaintenance();
+          $("btnFetchSwitches").onclick = () => fetchSwitches();
+
+          // universal job runner
+          $("btnFillPayload").onclick = () => {
+            $("jobPayload").value = JSON.stringify({ note:"optional", priority:"normal" }, null, 2);
+            log("Default payload filled.");
+          };
+
+          $("btnRunJob").onclick = () => {
+            const scope = $("jobScope").value;
+            const job = $("jobName").value.trim();
+            if(!job){ log("Blocked: Job Name is empty."); return; }
+            let payload = {};
+            const raw = ($("jobPayload").value || "").trim();
+            if(raw){
+              try{ payload = JSON.parse(raw); }
+              catch{ log("Blocked: Job Payload JSON is invalid."); return; }
+            }
+            triggerJob(job, scope, payload);
+          };
+        }
+
+        // ===== Switches =====
+        function paintSwitch(elm, on){
+          elm.classList.remove("on","off");
+          elm.classList.add(on ? "on" : "off");
+          elm.textContent = on ? "ON" : "OFF";
+        }
+        function toggleSwitch(key, elm){
+          state.switches[key] = !state.switches[key];
+          localStorage.setItem(LS.switches, JSON.stringify(state.switches));
+          paintSwitch(elm, state.switches[key]);
+          log(`Local switch toggled: ${key} = ${state.switches[key] ? "ON" : "OFF"}`);
+        }
+
+        async function applyMaintenance(){
+          const base = getApiBase();
+          if(!base){ setBackendUI(false); log("Blocked: API Base URL not set."); return; }
+          const mode = $("maintenanceMode").value;
+          log(`Apply maintenance: ${mode.toUpperCase()}`);
+          const r = await safeFetch(`${base.replace(/\/$/,"")}/api/admin/maintenance`, {
+            method:"POST",
+            headers: headers(),
+            body: JSON.stringify({ mode })
+          });
+          if(r.ok){ setBackendUI(true); log("Maintenance applied."); }
+          else { setBackendUI(false); log(`Maintenance failed (${r.status}): ${r.text.slice(0,240)}`); }
+        }
+
+        async function fetchSwitches(){
+          const base = getApiBase();
+          if(!base){ setBackendUI(false); log("Blocked: API Base URL not set."); return; }
+          const set = $("featureSet").value;
+          log(`Fetch switches: set=${set}`);
+          const r = await safeFetch(`${base.replace(/\/$/,"")}/api/admin/switches?set=${encodeURIComponent(set)}`, {
+            method:"GET",
+            headers: headers()
+          });
+          if(r.ok){ setBackendUI(true); log("Switches fetched (backend response loaded)."); }
+          else { setBackendUI(false); log(`Fetch switches failed (${r.status}): ${r.text.slice(0,240)}`); }
+        }
+
+        // ===== Health =====
+        async function runHealth(isPing){
+          const base = getApiBase();
+          if(!base){ setBackendUI(false); log("Blocked: API Base URL not set."); return; }
+          log(`${isPing ? "Ping" : "Health"} → ${base.replace(/\/$/,"")}/health`);
+          const r = await safeFetch(`${base.replace(/\/$/,"")}/health`, { method:"GET", headers: headers() });
+          if(r.ok){ setBackendUI(true); log("Health OK."); }
+          else { setBackendUI(false); log(`Health FAIL (${r.status}): ${r.text.slice(0,240)}`); }
+        }
+
+        // ===== Logs =====
+        async function loadLogs(){
+          const base = getApiBase();
+          if(!base){ setBackendUI(false); log("Blocked: API Base URL not set."); return; }
+          const filter = ($("logFilter").value || "all");
+          log(`Load logs: filter=${filter}`);
+          const r = await safeFetch(`${base.replace(/\/$/,"")}/api/admin/logs?filter=${encodeURIComponent(filter)}`, {
+            method:"GET", headers: headers()
+          });
+          if(r.ok){
+            setBackendUI(true);
+            const out = $("logOut");
+            if(r.json) out.textContent = JSON.stringify(r.json, null, 2);
+            else out.textContent = r.text || "No logs.";
+            log("Logs loaded into console.");
+          } else {
+            setBackendUI(false);
+            log(`Load logs failed (${r.status}): ${r.text.slice(0,240)}`);
+          }
+        }
+
+        // ===== Status snapshot refresh =====
+        function refreshMetrics(){
+          $("mApi").textContent = getApiBase() || "—";
+          $("mLast").textContent = localStorage.getItem(LS.last) || "—";
+          setBackendUI(false);
+        }
+
+        // ===== Project settings =====
+        function wireProjectSettings(view){
+          if(view === "builder"){
+            const data = safeJson(localStorage.getItem(LS.builder), { themeMode:"luxury-dark", security:"admin-only", notes:"" });
+            $("bThemeMode").value = data.themeMode || "luxury-dark";
+            $("bSecurity").value  = data.security  || "admin-only";
+            $("bNotes").value     = data.notes     || "";
+
+            $("btnSaveBuilderSettings").onclick = () => {
+              const next = {
+                themeMode: $("bThemeMode").value,
+                security: $("bSecurity").value,
+                notes: $("bNotes").value
+              };
+              localStorage.setItem(LS.builder, JSON.stringify(next));
+              log("Builder settings saved (local).");
+            };
+          }
+
+          if(view === "video"){
+            const data = safeJson(localStorage.getItem(LS.video), {
+              type:"funny", lang:"auto", len:"10-12", notify:"telegram", sheet:""
+            });
+            $("vType").value   = data.type   || "funny";
+            $("vLang").value   = data.lang   || "auto";
+            $("vLen").value    = data.len    || "10-12";
+            $("vNotify").value = data.notify || "telegram";
+            $("vSheet").value  = data.sheet  || "";
+
+            $("btnSaveVideoSettings").onclick = () => {
+              const next = {
+                type: $("vType").value,
+                lang: $("vLang").value,
+                len: $("vLen").value,
+                notify: $("vNotify").value,
+                sheet: $("vSheet").value.trim()
+              };
+              localStorage.setItem(LS.video, JSON.stringify(next));
+              log("Video settings saved (local).");
+            };
+          }
+
+          if(view === "stock"){
+            const data = safeJson(localStorage.getItem(LS.stock), {
+              market:"nasdaq", mode:"balanced", watch:"", notes:""
+            });
+            $("sMarket").value = data.market || "nasdaq";
+            $("sMode").value   = data.mode   || "balanced";
+            $("sWatch").value  = data.watch  || "";
+            $("sNotes").value  = data.notes  || "";
+
+            $("btnSaveStockSettings").onclick = () => {
+              const next = {
+                market: $("sMarket").value,
+                mode: $("sMode").value,
+                watch: $("sWatch").value.trim(),
+                notes: $("sNotes").value
+              };
+              localStorage.setItem(LS.stock, JSON.stringify(next));
+              log("Stock settings saved (local).");
+            };
+          }
+        }
+
+        function wireLogsTools(){
+          const conn = {
+            apiBase: getApiBase(),
+            adminKey: !!getAdminKey()
+          };
+          const b = safeJson(localStorage.getItem(LS.builder), null);
+          const v = safeJson(localStorage.getItem(LS.video), null);
+          const s = safeJson(localStorage.getItem(LS.stock), null);
+          const sw = state.switches;
+
+          $("lsConn").textContent = conn.apiBase ? "Saved" : "Not set";
+          $("lsB").textContent = b ? "Saved" : "Not set";
+          $("lsV").textContent = v ? "Saved" : "Not set";
+          $("lsS").textContent = s ? "Saved" : "Not set";
+          $("lsSw").textContent = sw ? "Saved" : "Not set";
+
+          $("btnLoadLogs2").onclick = () => loadLogs();
+
+          $("btnExportLocal").onclick = async () => {
+            const blob = {
+              connection: { apiBase: getApiBase(), adminKey: getAdminKey() ? "SET" : "" },
+              builder: safeJson(localStorage.getItem(LS.builder), {}),
+              video: safeJson(localStorage.getItem(LS.video), {}),
+              stock: safeJson(localStorage.getItem(LS.stock), {}),
+              switches: state.switches
+            };
+            const text = JSON.stringify(blob, null, 2);
+            try{
+              await navigator.clipboard.writeText(text);
+              log("Local settings exported to clipboard.");
+            }catch{
+              log("Export failed (clipboard permission).");
+            }
+          };
+
+          $("btnResetLocal").onclick = () => {
+            localStorage.removeItem(LS.builder);
+            localStorage.removeItem(LS.video);
+            localStorage.removeItem(LS.stock);
+            localStorage.removeItem(LS.switches);
+            localStorage.removeItem(LS.last);
+            state.switches = {
+              deepseek:false,
+              autoDisableOnErrors:false,
+              backups:false,
+              notifications:false,
+              webhookTriggers:false,
+              stripeLogs:false
+            };
+            log("Local settings reset (connection preserved).");
+            wireLogsTools();
+          };
+        }
+
+        // ===== Right-side controls =====
+        $("btnLoadLogs").onclick = () => loadLogs();
+        $("btnClearLogs").onclick = () => { $("logOut").textContent = "Logs will appear here…"; };
+        $("btnCopyLogs").onclick = async () => {
+          try{
+            await navigator.clipboard.writeText($("logOut").textContent || "");
+            log("Logs copied to clipboard.");
+          }catch{
+            log("Copy failed (clipboard permission).");
+          }
+        };
+        $("btnRefreshStatus").onclick = () => refreshMetrics();
+
+        // ===== Quick actions (sidebar) =====
+        $("qaRefresh").onclick = () => log("Refresh UI requested.");
+        $("qaHealth").onclick = () => runHealth(false);
+        $("qaSync").onclick = () => log("Sync (Sheet/DB/Config) requested (UI).");
+
+        $("qaAuto").onclick = () => {
+          const cur = (localStorage.getItem(LS.autoMode) || "off") === "on";
+          const next = !cur;
+          localStorage.setItem(LS.autoMode, next ? "on" : "off");
+          $("qaAuto").textContent = `Auto: ${next ? "ON" : "OFF"}`;
+          log(`Auto mode set to ${next ? "ON" : "OFF"} (UI only).`);
+        };
+
+        // open helpers
+        $("btnOpenAdminHtml").onclick = () => window.open("/admin.html", "_blank");
+        $("btnOpenAutomationHtml").onclick = () => window.open("/automation.html", "_blank");
+
+        // ===== Nav wiring =====
+        document.querySelectorAll(".navBtn").forEach(btn=>{
+          btn.addEventListener("click", ()=>{
+            setView(btn.getAttribute("data-view"));
+          });
+        });
+
+        // ===== Clock =====
+        function tick(){
+          $("clock").textContent = nowStr();
+        }
+        setInterval(tick, 1000);
+        tick();
+
+        // ===== Capture overview HTML once, then restore on view swap =====
+        window.__OVERVIEW_HTML = $("leftBody").innerHTML;
+
+        // ===== Initial paint =====
+        function init(){
+          // hydrate connection fields
+          $("apiBase").value = getApiBase();
+          $("adminKey").value = getAdminKey();
+
+          // paint global toggles
+          document.querySelectorAll("[data-switch]").forEach(elm=>{
+            paintSwitch(elm, !!state.switches[elm.getAttribute("data-switch")]);
+            elm.onclick = () => toggleSwitch(elm.getAttribute("data-switch"), elm);
+          });
+
+          // wire overview actions
+          wireOverview();
+
+          // right metrics
+          $("mLast").textContent = localStorage.getItem(LS.last) || "—";
+          $("mApi").textContent = getApiBase() || "—";
+          $("mView").textContent = "Command Center";
+
+          // auto button label
+          const am = (localStorage.getItem(LS.autoMode) || "off").toUpperCase();
+          $("qaAuto").textContent = `Auto: ${am}`;
+
+          // view restore
+          setBackendUI(false);
+          setView(state.view);
+
+          log("UI loaded (advanced).");
+        }
+
+        init();
+      </script>
+    </main>
   </div>
-
-  <script>
-    // ===== Local storage keys =====
-    const LS = {
-      apiBase: "bossmind_api_base",
-      adminKey: "bossmind_admin_key",
-      activeTab: "bossmind_active_tab",
-      autoMode: "bossmind_auto_mode",
-      videoType: "bossmind_video_type",
-      videoLang: "bossmind_video_lang"
-    };
-
-    const el = (id) => document.getElementById(id);
-
-    const logOutput = el("logOutput");
-    function log(line){
-      const ts = new Date().toISOString().replace("T"," ").replace("Z","");
-      logOutput.textContent += `\n[${ts}] ${line}`;
-      logOutput.scrollTop = logOutput.scrollHeight;
-    }
-
-    function setBackendUI(isUp){
-      const dot = el("backendDot");
-      const text = el("backendText");
-      dot.style.background = isUp ? "var(--ok)" : "var(--bad)";
-      dot.style.boxShadow = isUp ? "0 0 0 3px rgba(30,227,165,.12)" : "0 0 0 3px rgba(255,77,109,.12)";
-      text.textContent = isUp ? "Backend: up" : "Backend: down";
-    }
-
-    function getApiBase(){
-      return (localStorage.getItem(LS.apiBase) || "").trim();
-    }
-    function getAdminKey(){
-      return (localStorage.getItem(LS.adminKey) || "").trim();
-    }
-
-    function headers(){
-      const h = { "Content-Type":"application/json" };
-      const key = getAdminKey();
-      if(key) h["x-admin-key"] = key;
-      return h;
-    }
-
-    async function safeFetch(url, opts={}){
-      try{
-        const res = await fetch(url, opts);
-        const text = await res.text();
-        let json = null;
-        try{ json = JSON.parse(text); }catch(_){}
-        return { ok: res.ok, status: res.status, text, json };
-      }catch(err){
-        return { ok:false, status:0, text:String(err), json:null };
-      }
-    }
-
-    // ===== Tabs =====
-    const tabs = [
-      { id:"tabP1", panel:"panelP1", title:"Project 1 — AI Builder", sub:"Core tasks, status snapshot, and connection" },
-      { id:"tabP2", panel:"panelP2", title:"Project 2 — AI Video Generator", sub:"Queue, scenario review, render, publish, and preferences" },
-      { id:"tabP3", panel:"panelP3", title:"Project 3 — AI Stock System", sub:"Signals, risk, watchlist sync, and reporting" },
-    ];
-
-    function activateTab(tabKey){
-      tabs.forEach(t=>{
-        el(t.id).classList.toggle("active", t.id === tabKey);
-        el(t.panel).classList.toggle("active", t.id === tabKey);
-      });
-      const t = tabs.find(x=>x.id===tabKey) || tabs[0];
-      el("panelTitle").textContent = t.title;
-      el("panelSub").textContent = t.sub;
-      localStorage.setItem(LS.activeTab, tabKey);
-      log(`Switched to ${t.title}`);
-    }
-
-    document.querySelectorAll(".tab").forEach(btn=>{
-      btn.addEventListener("click", ()=> activateTab(btn.id));
-    });
-
-    // ===== Connection Save / Ping =====
-    function refreshConnUI(){
-      const base = getApiBase();
-      el("apiBase").value = base;
-      el("adminKey").value = getAdminKey();
-      el("chipApi").textContent = base ? `API: set` : `API: not set`;
-      el("chipApi").parentElement.classList.toggle("ok", !!base);
-      el("chipApi").parentElement.classList.toggle("bad", !base);
-    }
-
-    el("btnSaveConn").addEventListener("click", ()=>{
-      const base = el("apiBase").value.trim();
-      const key  = el("adminKey").value.trim();
-      localStorage.setItem(LS.apiBase, base);
-      localStorage.setItem(LS.adminKey, key);
-      refreshConnUI();
-      log("Connection saved.");
-    });
-
-    el("btnPing").addEventListener("click", async ()=>{
-      const base = getApiBase();
-      if(!base){ log("Ping blocked: API Base URL not set."); setBackendUI(false); return; }
-      log(`Ping → ${base}/health`);
-      const r = await safeFetch(`${base.replace(/\/$/,"")}/health`, { method:"GET", headers: headers() });
-      if(r.ok){
-        setBackendUI(true);
-        log("Ping OK.");
-      }else{
-        setBackendUI(false);
-        log(`Ping failed (${r.status}): ${r.text.slice(0,200)}`);
-      }
-    });
-
-    // ===== Global buttons =====
-    el("btnRefreshAll").addEventListener("click", ()=>{
-      log("Refresh All (UI) triggered.");
-    });
-
-    el("btnHealth").addEventListener("click", async ()=>{
-      const base = getApiBase();
-      if(!base){ log("Health blocked: API Base URL not set."); setBackendUI(false); return; }
-      log("Run Health Check…");
-      const r = await safeFetch(`${base.replace(/\/$/,"")}/health`, { method:"GET", headers: headers() });
-      if(r.ok){ setBackendUI(true); log("Health: OK"); }
-      else { setBackendUI(false); log(`Health: FAIL (${r.status})`); }
-    });
-
-    el("btnSyncAll").addEventListener("click", ()=>{
-      log("Sync (Sheet / DB / Config) requested (UI).");
-    });
-
-    // ===== Jobs trigger =====
-    async function triggerJob(job){
-      const base = getApiBase();
-      if(!base){ log("Job blocked: API Base URL not set."); setBackendUI(false); return; }
-
-      const activeTab = localStorage.getItem(LS.activeTab) || "tabP1";
-      const scope =
-        activeTab === "tabP1" ? "builder" :
-        activeTab === "tabP2" ? "video"   :
-        "stock";
-
-      const payload = {
-        job,
-        scope,
-        prefs: {
-          videoType: localStorage.getItem(LS.videoType) || "funny",
-          videoLang: localStorage.getItem(LS.videoLang) || "auto"
-        }
-      };
-
-      log(`Job → ${job} (scope=${scope})`);
-      const r = await safeFetch(`${base.replace(/\/$/,"")}/api/admin/jobs`, {
-        method:"POST",
-        headers: headers(),
-        body: JSON.stringify(payload)
-      });
-
-      if(r.ok){
-        setBackendUI(true);
-        log(`Job accepted: ${job}`);
-      }else{
-        setBackendUI(false);
-        log(`Job failed (${r.status}): ${r.text.slice(0,240)}`);
-      }
-    }
-
-    document.querySelectorAll("[data-job]").forEach(btn=>{
-      btn.addEventListener("click", ()=> triggerJob(btn.getAttribute("data-job")));
-    });
-
-    // ===== Builder status =====
-    el("btnRefreshStatus").addEventListener("click", async ()=>{
-      const base = getApiBase();
-      if(!base){ log("Status blocked: API Base URL not set."); setBackendUI(false); return; }
-      log("Fetch builder status…");
-      const r = await safeFetch(`${base.replace(/\/$/,"")}/api/admin/status/builder`, { method:"GET", headers: headers() });
-      if(r.ok && r.json){
-        setBackendUI(true);
-        el("s1").textContent = r.json.lastExport ?? "—";
-        el("s2").textContent = r.json.supabaseSync ?? "—";
-        el("s3").textContent = r.json.activeTheme ?? "—";
-        el("s4").textContent = r.json.errors24h ?? "—";
-        log("Builder status updated.");
-      }else{
-        setBackendUI(false);
-        log(`Builder status failed (${r.status}): ${r.text.slice(0,240)}`);
-      }
-    });
-
-    // ===== Stock status =====
-    async function refreshStockStatus(){
-      const base = getApiBase();
-      if(!base){ return; }
-      const r = await safeFetch(`${base.replace(/\/$/,"")}/api/admin/status/stock`, { method:"GET", headers: headers() });
-      if(r.ok && r.json){
-        setBackendUI(true);
-        el("stk1").textContent = r.json.marketSession ?? "—";
-        el("stk2").textContent = r.json.signalsToday ?? "—";
-        el("stk3").textContent = r.json.riskLevel ?? "—";
-        el("stk4").textContent = r.json.lastReport ?? "—";
-        log("Stock status updated.");
-      }
-    }
-
-    // ===== Video prefs =====
-    function loadVideoPrefs(){
-      const vt = localStorage.getItem(LS.videoType) || "funny";
-      const vl = localStorage.getItem(LS.videoLang) || "auto";
-      el("videoType").value = vt;
-      el("videoLang").value = vl;
-    }
-    el("btnSaveVideoPrefs").addEventListener("click", ()=>{
-      localStorage.setItem(LS.videoType, el("videoType").value);
-      localStorage.setItem(LS.videoLang, el("videoLang").value);
-      log("Video preferences saved.");
-    });
-
-    // ===== Switches / maintenance (UI) =====
-    function toggleButtonState(btn, on){
-      btn.classList.toggle("green", on);
-      btn.classList.toggle("ghost", !on);
-      btn.textContent = btn.textContent.replace("ON","").replace("OFF","").trim() + (on ? " (ON)" : " (OFF)");
-    }
-
-    // Local-only visual toggle (safe)
-    const localSwitchState = {};
-    document.querySelectorAll("[data-switch]").forEach(btn=>{
-      btn.addEventListener("click", ()=>{
-        const key = btn.getAttribute("data-switch");
-        localSwitchState[key] = !localSwitchState[key];
-        // reset label safely
-        btn.textContent = btn.textContent.replace(/\s+\(ON\)|\s+\(OFF\)/g,"");
-        btn.classList.remove("green","ghost");
-        btn.classList.add(localSwitchState[key] ? "green" : "ghost");
-        btn.textContent += localSwitchState[key] ? " (ON)" : " (OFF)";
-        log(`Local switch toggled: ${key} = ${localSwitchState[key] ? "ON" : "OFF"}`);
-      });
-    });
-
-    el("btnApplyMaintenance").addEventListener("click", async ()=>{
-      const base = getApiBase();
-      if(!base){ log("Maintenance blocked: API Base URL not set."); setBackendUI(false); return; }
-      const mode = el("maintenanceMode").value;
-      log(`Apply maintenance: ${mode.toUpperCase()}`);
-      const r = await safeFetch(`${base.replace(/\/$/,"")}/api/admin/maintenance`, {
-        method:"POST", headers: headers(), body: JSON.stringify({ mode })
-      });
-      if(r.ok){ setBackendUI(true); log("Maintenance applied."); }
-      else { setBackendUI(false); log(`Maintenance failed (${r.status}): ${r.text.slice(0,240)}`); }
-    });
-
-    el("btnFetchSwitches").addEventListener("click", async ()=>{
-      const base = getApiBase();
-      if(!base){ log("Fetch switches blocked: API Base URL not set."); setBackendUI(false); return; }
-      const set = el("featureSet").value;
-      log(`Fetch switches: set=${set}`);
-      const r = await safeFetch(`${base.replace(/\/$/,"")}/api/admin/switches?set=${encodeURIComponent(set)}`, {
-        method:"GET", headers: headers()
-      });
-      if(r.ok){ setBackendUI(true); log("Switches fetched (check backend response)."); }
-      else { setBackendUI(false); log(`Fetch switches failed (${r.status}): ${r.text.slice(0,240)}`); }
-    });
-
-    // ===== Logs =====
-    el("btnLoadLogs").addEventListener("click", async ()=>{
-      const base = getApiBase();
-      if(!base){ log("Load logs blocked: API Base URL not set."); setBackendUI(false); return; }
-      const filter = el("logFilter").value || "all";
-      log(`Load logs: filter=${filter}`);
-      const r = await safeFetch(`${base.replace(/\/$/,"")}/api/admin/logs?filter=${encodeURIComponent(filter)}`, {
-        method:"GET", headers: headers()
-      });
-      if(r.ok){
-        setBackendUI(true);
-        log("Logs loaded.");
-        if(r.json){
-          logOutput.textContent = "Logs:\n" + JSON.stringify(r.json, null, 2);
-        }else{
-          logOutput.textContent = r.text || "No logs.";
-        }
-      }else{
-        setBackendUI(false);
-        log(`Load logs failed (${r.status}): ${r.text.slice(0,240)}`);
-      }
-    });
-
-    el("btnAutoToggle").addEventListener("click", ()=>{
-      const cur = (localStorage.getItem(LS.autoMode) || "off") === "on";
-      const next = !cur;
-      localStorage.setItem(LS.autoMode, next ? "on" : "off");
-      el("btnAutoToggle").textContent = `Auto: ${next ? "ON" : "OFF"}`;
-      log(`Auto mode set to ${next ? "ON" : "OFF"} (UI only).`);
-    });
-
-    el("btnClearLogs").addEventListener("click", ()=>{
-      logOutput.textContent = "Logs cleared.";
-    });
-
-    el("btnCopyLogs").addEventListener("click", async ()=>{
-      try{
-        await navigator.clipboard.writeText(logOutput.textContent || "");
-        log("Logs copied to clipboard.");
-      }catch(e){
-        log("Copy failed (browser permission).");
-      }
-    });
-
-    // ===== Clock =====
-    function tick(){
-      const d = new Date();
-      el("clockText").textContent = d.toLocaleString();
-    }
-    setInterval(tick, 1000);
-    tick();
-
-    // ===== Init =====
-    (function init(){
-      // clean default log box
-      logOutput.textContent = "Logs will appear here…";
-      refreshConnUI();
-      loadVideoPrefs();
-      el("btnAutoToggle").textContent = `Auto: ${(localStorage.getItem(LS.autoMode) || "off").toUpperCase()}`;
-      const saved = localStorage.getItem(LS.activeTab) || "tabP1";
-      activateTab(saved);
-      setBackendUI(false);
-
-      // attempt silent stock status refresh if base set
-      if(getApiBase()){ refreshStockStatus(); }
-      log("UI loaded.");
-    })();
-  </script>
 </body>
 </html>
