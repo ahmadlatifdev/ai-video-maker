@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BossMind Admin — AI Video Maker</title>
+  <style>
+    :root{
+      --bg:#07080c;
+      --panel:#0c0f16;
+      --panel2:#0a0d13;
+      --line:#1b2231;
+      --text:#e7ecf6;
+      --muted:#a7b3c8;
+      --gold:#d7b46a;
+      --green:#34d399;
+      --red:#fb7185;
+      --shadow: 0 20px 60px rgba(0,0,0,.55);
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: radial-gradient(1200px 700px at 20% -10%, rgba(215,180,106,.18), transparent 55%),
+                  radial-gradient(900px 600px at 100% 0%, rgba(52,211,153,.10), transparent 50%),
+                  var(--bg);
+      color:var(--text);
+    }
+    .app{
+      display:grid;
+      grid-template-columns: 310px 1fr;
+      min-height:100vh;
+    }
+    .sidebar{
+      border-right:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(12,15,22,.95), rgba(8,10,14,.95));
+      padding:18px;
+      position:sticky;
+      top:0;
+      height:100vh;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:14px 14px 10px;
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      background: rgba(10,13,19,.55);
+    }
+    .brand h1{
+      margin:0;
+      font-size:14px;
+      letter-spacing:.6px;
+      text-transform:uppercase;
+    }
+    .pill{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(215,180,106,.35);
+      color:var(--gold);
+      background: rgba(215,180,106,.08);
+      white-space:nowrap;
+    }
+    .nav{
+      margin-top:16px;
+      padding:10px;
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(10,13,19,.35);
+    }
+    .nav .sectionTitle{
+      font-size:12px;
+      color:var(--muted);
+      letter-spacing:.4px;
+      text-transform:uppercase;
+      margin:10px 8px 6px;
+    }
+    .nav button{
+      width:100%;
+      text-align:left;
+      padding:10px 10px;
+      border-radius:12px;
+      border:1px solid transparent;
+      background: transparent;
+      color: var(--text);
+      cursor:pointer;
+      font-size:14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .nav button:hover{
+      background: rgba(215,180,106,.07);
+      border-color: rgba(215,180,106,.18);
+    }
+    .nav button.active{
+      background: rgba(215,180,106,.10);
+      border-color: rgba(215,180,106,.30);
+    }
+    .badge{
+      font-size:12px;
+      color: var(--muted);
+      border:1px solid var(--line);
+      padding:4px 8px;
+      border-radius:999px;
+      background: rgba(255,255,255,.02);
+    }
+    .main{
+      padding:22px;
+    }
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:16px 18px;
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(12,15,22,.55);
+      box-shadow: var(--shadow);
+    }
+    .topbar .title{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .topbar .title strong{
+      font-size:16px;
+      letter-spacing:.2px;
+    }
+    .topbar .title span{
+      color: var(--muted);
+      font-size:13px;
+    }
+    .statusLine{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-size:13px;
+      color: var(--muted);
+    }
+    .dot{
+      width:10px;
+      height:10px;
+      border-radius:999px;
+      background: var(--red);
+      box-shadow: 0 0 0 6px rgba(251,113,133,.12);
+    }
+    .dot.ok{
+      background: var(--green);
+      box-shadow: 0 0 0 6px rgba(52,211,153,.12);
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap:16px;
+      margin-top:16px;
+    }
+    .card{
+      grid-column: span 12;
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(12,15,22,.45);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .cardHeader{
+      padding:14px 16px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      background: rgba(10,13,19,.55);
+    }
+    .cardHeader strong{
+      font-size:14px;
+      letter-spacing:.2px;
+    }
+    .cardBody{ padding:16px; }
+    .row{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .btn{
+      border:1px solid rgba(215,180,106,.35);
+      background: rgba(215,180,106,.08);
+      color: var(--gold);
+      padding:10px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-size:13px;
+    }
+    .btn:hover{
+      background: rgba(215,180,106,.12);
+    }
+    pre{
+      margin:0;
+      padding:12px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.25);
+      color: #dbe6ff;
+      overflow:auto;
+      font-size:12px;
+      line-height:1.45;
+    }
+    .twoCol .card{ grid-column: span 12; }
+    @media (min-width: 1024px){
+      .twoCol .card{ grid-column: span 6; }
+    }
+    .hint{ color: var(--muted); font-size:13px; margin:0; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <h1>BossMind Admin</h1>
+        <div class="pill">AI Video Maker</div>
+      </div>
+
+      <div class="nav" id="nav">
+        <div class="sectionTitle">Core</div>
+        <button class="active" data-view="overview">Overview <span class="badge">Live</span></button>
+        <button data-view="jobs">Jobs Queue <span class="badge">Soon</span></button>
+        <button data-view="renders">Renders <span class="badge">Soon</span></button>
+
+        <div class="sectionTitle">Publishing</div>
+        <button data-view="youtube">YouTube <span class="badge">Soon</span></button>
+        <button data-view="tiktok">TikTok <span class="badge">Soon</span></button>
+
+        <div class="sectionTitle">System</div>
+        <button data-view="logs">Logs <span class="badge">Soon</span></button>
+        <button data-view="settings">Settings <span class="badge">Soon</span></button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="title">
+          <strong id="viewTitle">Overview</strong>
+          <span>video.bossmind.ai/admin</span>
+        </div>
+        <div class="statusLine">
+          <div class="dot" id="dot"></div>
+          <span id="statusText">Checking /health…</span>
+        </div>
+      </div>
+
+      <div class="grid twoCol" id="viewRoot">
+        <section class="card">
+          <div class="cardHeader">
+            <strong>System Health</strong>
+            <span class="badge" id="healthBadge">Loading…</span>
+          </div>
+          <div class="cardBody">
+            <p class="hint">This reads from <code>/health</code> (your live API).</p>
+            <pre id="healthJson">{}</pre>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="cardHeader">
+            <strong>Quick Actions</strong>
+            <span class="badge">Admin</span>
+          </div>
+          <div class="cardBody">
+            <div class="row">
+              <button class="btn" id="btnRefresh">Refresh Health</button>
+              <button class="btn" id="btnPing">Open /health</button>
+              <button class="btn" id="btnHome">Open /</button>
+            </div>
+            <p class="hint" style="margin-top:12px;">
+              Next we will wire real endpoints: queue job, list jobs, render status, publish status.
+            </p>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const dot = document.getElementById("dot");
+    const statusText = document.getElementById("statusText");
+    const healthJson = document.getElementById("healthJson");
+    const healthBadge = document.getElementById("healthBadge");
+    const viewTitle = document.getElementById("viewTitle");
+
+    async function loadHealth(){
+      try{
+        statusText.textContent = "Checking /health…";
+        dot.classList.remove("ok");
+
+        const r = await fetch("/health", { cache: "no-store" });
+        const data = await r.json();
+
+        healthJson.textContent = JSON.stringify(data, null, 2);
+        healthBadge.textContent = "OK";
+        dot.classList.add("ok");
+        statusText.textContent = "Online • " + (data.timestamp || "no timestamp");
+      }catch(e){
+        healthBadge.textContent = "DOWN";
+        statusText.textContent = "Offline • /health failed";
+        healthJson.textContent = JSON.stringify({ error: String(e) }, null, 2);
+        dot.classList.remove("ok");
+      }
+    }
+
+    document.getElementById("btnRefresh").onclick = loadHealth;
+    document.getElementById("btnPing").onclick = () => window.open("/health", "_blank");
+    document.getElementById("btnHome").onclick = () => window.open("/", "_blank");
+
+    document.getElementById("nav").addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-view]");
+      if(!btn) return;
+      [...document.querySelectorAll("#nav button")].forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      viewTitle.textContent = btn.textContent.replace("Live","").replace("Soon","").trim();
+    });
+
+    loadHealth();
+  </script>
+</body>
+</html>
