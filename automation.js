@@ -3,6 +3,15 @@ const path = require("path");
 const fs = require("fs");
 
 const app = express();
+// HEALTH CHECK (REQUIRED)
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    service: "ai-video-maker",
+    time: new Date().toISOString()
+  });
+});
+
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
