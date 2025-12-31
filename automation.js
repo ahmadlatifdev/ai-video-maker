@@ -1,15 +1,18 @@
-// automation.js — COMPLETE & FINAL (Static + API)
+// automation.js — COMPLETE (Static + API + /admin)
 
 const express = require("express");
 const path = require("path");
 
 const app = express();
-
-// Railway dynamic port
 const PORT = process.env.PORT || 8080;
 
-// ✅ SERVE STATIC FILES
+// Serve static files from /public
 app.use(express.static(path.join(__dirname, "public")));
+
+// ✅ Clean admin route: /admin -> admin.html
+app.get("/admin", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "admin.html"));
+});
 
 // Root
 app.get("/", (req, res) => {
