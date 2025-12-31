@@ -11,57 +11,76 @@ on:
         options:
           - trigger_deploy
           - health_check
-      target_url:
+      url_to_check:
         description: "URL to check (used only for health_check)"
         required: false
         default: "https://video.bossmind.ai/"
         type: string
 
-  schedule:
-    - cron: "17 3 * * *"
-
+# IMPORTANT: allow workflow to push commits (needed for trigger_deploy)
 permissions:
   contents: write
 
 jobs:
   bossmind:
+    name: bossmind
     runs-on: ubuntu-latest
 
     steps:
+      - name: Set up job
+        run: echo "BossMind job starting..."
+
+      # Checkout using your fine-grained PAT (so future git operations can authenticate)
       - name: Checkout (with BossMind token)
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.BOSSMIND_GITHUB_TOKEN }}
           fetch-depth: 0
+          token: ${{ secrets.BOSSMIND_GITHUB_TOKEN }}
 
       - name: Configure Git identity
         run: |
-          git config user.name "BossMind Orchestrator"
-          git config user.email "bossmind@users.noreply.github.com"
+          git config --global user.email "bossmind@ai.local"
+          git config --global user.name "BossMind"
 
       - name: Decide action
         id: decide
         run: |
-          ACTION="${{ github.event.inputs.action }}"
-          if [ -z "$ACTION" ]; then ACTION="trigger_deploy"; fi
-          echo "action=$ACTION" >> "$GITHUB_OUTPUT"
+          echo "ACTION=${{ inputs.action }}" >> $GITHUB_ENV
+          echo "URL_TO_CHECK=${{ inputs.url_to_check }}" >> $GITHUB_ENV
 
+      # ✅ FIXED: git push will use BOSSMIND_GITHUB_TOKEN explicitly
       - name: Trigger Railway deploy (safe empty commit)
-        if: steps.decide.outputs.action == 'trigger_deploy'
+        if: env.ACTION == 'trigger_deploy'
+        env:
+          BOSSMIND_GITHUB_TOKEN: ${{ secrets.BOSSMIND_GITHUB_TOKEN }}
         run: |
           TS="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-          git commit --allow-empty -m "BossMind: trigger deploy @ $TS"
-          git push origin HEAD:main
+          echo "[main $(git rev-parse --short HEAD)] BossMind: trigger deploy @ $TS"
+
+          # Force HTTPS remote to authenticate using the PAT
+          git remote set-url origin "https://x-access-token:${BOSSMIND_GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
+
+          # Empty commit to trigger Railway/Git-based deploy hooks
+          git commit --allow-empty -m "BossMind: trigger deploy @ ${TS}" || true
+
+          # Push to the same branch this workflow ran on (usually main)
+          git push origin "${{ github.ref_name }}"
 
       - name: Health check (HTTP status)
-        if: steps.decide.outputs.action == 'health_check'
-        env:
-          TARGET_URL: ${{ github.event.inputs.target_url }}
+        if: env.ACTION == 'health_check'
         run: |
-          if [ -z "$TARGET_URL" ]; then TARGET_URL="https://video.bossmind.ai/"; fi
-          echo "Checking: $TARGET_URL"
-          CODE="$(curl -s -o /dev/null -w "%{http_code}" "$TARGET_URL")"
-          echo "HTTP status: $CODE"
-          if [ "$CODE" -lt 200 ] || [ "$CODE" -ge 400 ]; then
-            exit 1
+          echo "Checking: ${URL_TO_CHECK}"
+          code=$(curl -s -o /dev/null -w "%{http_code}" "${URL_TO_CHECK}" || true)
+          echo "HTTP_STATUS=${code}"
+          if [ "${code}" = "200" ] || [ "${code}" = "301" ] || [ "${code}" = "302" ]; then
+            echo "Health check OK"
+            exit 0
           fi
+          echo "Health check FAILED"
+          exit 1
+
+      - name: Post Checkout (with BossMind token)
+        run: echo "Post-checkout complete."
+
+      - name: Complete job
+        run: echo "BossMind job complete."
