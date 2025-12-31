@@ -1,19 +1,19 @@
 const express = require("express");
-const fetch = require("node-fetch");
 
 const app = express();
-app.use(express.json());
-
 const PORT = process.env.PORT || 8080;
 
-/* -----------------------------
-   HEALTH CHECK
------------------------------- */
+/**
+ * Root – confirms server is alive
+ */
 app.get("/", (req, res) => {
   res.send("Hello World");
 });
 
-app.get("/health", async (req, res) => {
+/**
+ * Health check – used by BossMind + GitHub Actions
+ */
+app.get("/health", (req, res) => {
   res.json({
     ok: true,
     status: "healthy",
@@ -22,9 +22,9 @@ app.get("/health", async (req, res) => {
   });
 });
 
-/* -----------------------------
-   START SERVER
------------------------------- */
+/**
+ * START SERVER
+ */
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 BossMind Core API listening on http://0.0.0.0:${PORT}`);
 });
