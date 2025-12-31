@@ -1,12 +1,16 @@
 {
   "name": "ai-video-maker",
   "version": "1.0.0",
+  "private": true,
   "main": "automation.js",
   "scripts": {
     "start": "node automation.js"
   },
+  "engines": {
+    "node": "18.x"
+  },
   "dependencies": {
     "express": "^4.19.2",
-    "node-fetch": "^2.7.0"
+    "node-fetch": "^3.3.2"
   }
 }
