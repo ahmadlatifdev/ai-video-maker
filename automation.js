@@ -1,51 +1,28 @@
-const express = require("express");
-const path = require("path");
-const fs = require("fs");
+// automation.js
+import express from "express";
+import cors from "cors";
 
 const app = express();
-// HEALTH CHECK (REQUIRED)
+
+// ---- middleware ----
+app.use(cors());
+app.use(express.json({ limit: "10mb" }));
+
+// ---- REQUIRED HEALTH ROUTE ----
 app.get("/health", (req, res) => {
-  res.status(200).json({
+  return res.status(200).json({
     status: "ok",
     service: "ai-video-maker",
-    time: new Date().toISOString()
+    time: new Date().toISOString(),
   });
 });
 
-const PORT = process.env.PORT || 3000;
+// ---- YOUR EXISTING ROUTES (keep yours here) ----
+// app.post("/...", ...);
+// app.get("/...", ...);
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-const PUBLIC_DIR = path.join(__dirname, "public");
-app.use(express.static(PUBLIC_DIR));
-
-app.get("/health", (req, res) => {
-  res.json({ status: "ok", service: "BossMind Automation", port: PORT });
-});
-
-app.get("/_debug/files", (req, res) => {
-  try {
-    res.json({ public: fs.readdirSync(PUBLIC_DIR) });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// ✅ add /admin -> admin.html
-app.get("/admin", (req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, "admin.html"));
-});
-
-// ✅ add /automation -> automation.html
-app.get("/automation", (req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, "automation.html"));
-});
-
-app.get("/", (req, res) => {
-  res.send("BossMind Automation Server is running");
-});
-
+// ---- start ----
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`BossMind Automation running on port ${PORT}`);
 });
