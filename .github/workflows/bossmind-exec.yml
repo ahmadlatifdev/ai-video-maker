@@ -1,0 +1,67 @@
+name: BossMind Execution
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Choose what to run"
+        required: true
+        default: "trigger_deploy"
+        type: choice
+        options:
+          - trigger_deploy
+          - health_check
+      target_url:
+        description: "URL to check (used only for health_check)"
+        required: false
+        default: "https://video.bossmind.ai/"
+        type: string
+
+  schedule:
+    - cron: "17 3 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  bossmind:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout (with BossMind token)
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.BOSSMIND_GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Configure Git identity
+        run: |
+          git config user.name "BossMind Orchestrator"
+          git config user.email "bossmind@users.noreply.github.com"
+
+      - name: Decide action
+        id: decide
+        run: |
+          ACTION="${{ github.event.inputs.action }}"
+          if [ -z "$ACTION" ]; then ACTION="trigger_deploy"; fi
+          echo "action=$ACTION" >> "$GITHUB_OUTPUT"
+
+      - name: Trigger Railway deploy (safe empty commit)
+        if: steps.decide.outputs.action == 'trigger_deploy'
+        run: |
+          TS="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          git commit --allow-empty -m "BossMind: trigger deploy @ $TS"
+          git push origin HEAD:main
+
+      - name: Health check (HTTP status)
+        if: steps.decide.outputs.action == 'health_check'
+        env:
+          TARGET_URL: ${{ github.event.inputs.target_url }}
+        run: |
+          if [ -z "$TARGET_URL" ]; then TARGET_URL="https://video.bossmind.ai/"; fi
+          echo "Checking: $TARGET_URL"
+          CODE="$(curl -s -o /dev/null -w "%{http_code}" "$TARGET_URL")"
+          echo "HTTP status: $CODE"
+          if [ "$CODE" -lt 200 ] || [ "$CODE" -ge 400 ]; then
+            exit 1
+          fi
