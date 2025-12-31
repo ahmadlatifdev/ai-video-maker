@@ -1,84 +1,57 @@
+/**
+ * BossMind – Automation Core
+ * Stable Railway + Cloudflare compatible
+ */
+
 import express from "express";
+import process from "process";
 
 const app = express();
+
+/* ===============================
+   CONFIG
+================================ */
 const PORT = process.env.PORT || 8080;
 
-/* =========================
-   Middleware
-========================= */
+/* ===============================
+   MIDDLEWARE
+================================ */
 app.use(express.json());
 
-/* =========================
-   Root – BossMind Index
-========================= */
+/* ===============================
+   ROUTES
+================================ */
+
+// Root – Cloudflare expects this to respond fast
 app.get("/", (req, res) => {
-  res.type("html").send(`
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>BossMind Core</title>
-  <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont;
-      background: #0b0f1a;
-      color: #eaeaf0;
-      padding: 40px;
-    }
-    h1 { color: #9ae6ff; }
-    code {
-      background: #12172a;
-      padding: 6px 10px;
-      border-radius: 6px;
-      display: inline-block;
-    }
-    a { color: #7dd3fc; text-decoration: none; }
-  </style>
-</head>
-<body>
-  <h1>🚀 BossMind Core is Online</h1>
-  <p>Status: <strong>RUNNING</strong></p>
-
-  <h3>Available Endpoints</h3>
-  <ul>
-    <li><code>/health</code> – system health</li>
-    <li><code>/api</code> – API index</li>
-  </ul>
-
-  <p>Domain: <strong>video.bossmind.ai</strong></p>
-</body>
-</html>
-`);
+  res.status(200).send("BossMind API is running");
 });
 
-/* =========================
-   Health Check
-========================= */
+// Health check (used by Actions + monitoring)
 app.get("/health", (req, res) => {
-  res.json({
+  res.status(200).json({
     ok: true,
     status: "healthy",
-    hasStabilityKey: !!process.env.STABILITY_API_KEY,
+    hasStabilityKey: Boolean(process.env.STABILITY_API_KEY),
     engine: "stable-diffusion-xl-1024-v1-0",
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
-/* =========================
-   API Index
-========================= */
-app.get("/api", (req, res) => {
-  res.json({
-    service: "BossMind Core",
-    version: "1.0.0",
-    endpoints: ["/health"],
-    status: "online"
-  });
+/* ===============================
+   ERROR HANDLING (NO CRASH)
+================================ */
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught Exception:", err);
 });
 
-/* =========================
-   Start Server
-========================= */
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled Rejection:", reason);
+});
+
+/* ===============================
+   START SERVER
+================================ */
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 BossMind Core API listening on http://0.0.0.0:${PORT}`);
 });
