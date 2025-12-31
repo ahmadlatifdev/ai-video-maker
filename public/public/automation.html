@@ -1,0 +1,1063 @@
+<!-- public/automation.html -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BossMind Admin — Automation Center</title>
+
+  <style>
+    :root{
+      --bg:#0b0f16;
+      --panel:#0f1623;
+      --panel2:#0c1220;
+      --text:#e9eefc;
+      --muted:#a9b6d6;
+      --line:rgba(255,255,255,.08);
+      --good:#19c37d;
+      --warn:#fbbf24;
+      --bad:#ef4444;
+      --accent:#7c3aed;
+      --accent2:#22c55e;
+      --shadow:0 10px 35px rgba(0,0,0,.35);
+      --radius:18px;
+      --radius2:14px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background: radial-gradient(900px 500px at 15% 10%, rgba(124,58,237,.18), transparent 60%),
+                  radial-gradient(800px 500px at 85% 15%, rgba(34,197,94,.12), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+
+    .wrap{
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 18px 16px 30px;
+    }
+
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding: 10px 2px 18px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width: 260px;
+    }
+    .logo{
+      width:46px;height:46px;border-radius:14px;
+      background: linear-gradient(135deg, rgba(124,58,237,.95), rgba(34,197,94,.85));
+      box-shadow: 0 10px 35px rgba(0,0,0,.35);
+    }
+    .brand h1{
+      margin:0;
+      font-size: 18px;
+      letter-spacing:.2px;
+    }
+    .brand p{
+      margin:2px 0 0;
+      font-size:12.5px;
+      color:var(--muted);
+    }
+
+    .top-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .btn{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 14px;
+      cursor:pointer;
+      font-weight:600;
+      font-size: 13px;
+      transition: transform .06s ease, background .2s ease, border-color .2s ease;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .btn:hover{ background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.14); }
+    .btn:active{ transform: translateY(1px); }
+    .btn.primary{ background: rgba(124,58,237,.22); border-color: rgba(124,58,237,.45); }
+    .btn.good{ background: rgba(34,197,94,.18); border-color: rgba(34,197,94,.4); }
+    .btn.warn{ background: rgba(251,191,36,.14); border-color: rgba(251,191,36,.35); }
+    .btn.bad{ background: rgba(239,68,68,.14); border-color: rgba(239,68,68,.35); }
+    .btn.mini{ padding: 8px 10px; border-radius: 12px; font-size: 12.5px; }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 14px;
+    }
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: 1fr; }
+      header{ flex-direction:column; align-items:flex-start; }
+      .top-actions{ width:100%; justify-content:flex-start; }
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.02));
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 35px rgba(0,0,0,.35);
+      overflow:hidden;
+    }
+    .card .hd{
+      padding: 14px 14px 12px;
+      border-bottom: 1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background: rgba(0,0,0,.18);
+    }
+    .card .hd h2{
+      margin:0;
+      font-size: 14px;
+      letter-spacing:.2px;
+    }
+    .card .bd{ padding: 14px; }
+
+    .tabs{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom: 12px;
+    }
+    .tab{
+      padding: 10px 12px;
+      border-radius: 14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.02);
+      cursor:pointer;
+      font-weight:700;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .tab.active{
+      color: var(--text);
+      background: rgba(124,58,237,.18);
+      border-color: rgba(124,58,237,.45);
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .pill{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.02);
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--muted);
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .dot{
+      width:8px;height:8px;border-radius:50%;
+      background: var(--muted);
+      box-shadow: 0 0 12px rgba(255,255,255,.08);
+    }
+    .dot.good{ background: var(--good); box-shadow: 0 0 14px rgba(25,195,125,.35); }
+    .dot.warn{ background: var(--warn); box-shadow: 0 0 14px rgba(251,191,36,.25); }
+    .dot.bad{ background: var(--bad); box-shadow: 0 0 14px rgba(239,68,68,.25); }
+
+    label{
+      font-size: 12px;
+      color: var(--muted);
+      display:block;
+      margin: 10px 0 6px;
+    }
+    input, select, textarea{
+      width:100%;
+      padding: 11px 12px;
+      border-radius: 14px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.25);
+      color: var(--text);
+      outline:none;
+      font-size: 13.5px;
+    }
+    textarea{ min-height: 110px; font-family: var(--mono); font-size: 12.7px; line-height:1.35; }
+
+    .split{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 680px){ .split{ grid-template-columns: 1fr; } }
+
+    .secTitle{
+      margin: 0 0 8px;
+      font-size: 12.5px;
+      color: var(--muted);
+      letter-spacing: .2px;
+    }
+
+    .hr{
+      height:1px;
+      background: var(--line);
+      margin: 12px 0;
+    }
+
+    .mono{
+      font-family: var(--mono);
+      font-size: 12.5px;
+      color: rgba(233,238,252,.92);
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+
+    .hint{
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .small{
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .kv{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 680px){ .kv{ grid-template-columns: 1fr; } }
+
+    .box{
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.22);
+      border-radius: var(--radius2);
+      padding: 12px;
+    }
+
+    .table{
+      width:100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+    }
+    .table th,.table td{
+      border-bottom:1px solid var(--line);
+      padding: 9px 6px;
+      text-align:left;
+      color: rgba(233,238,252,.92);
+    }
+    .table th{ color: var(--muted); font-weight: 700; }
+    .right{ text-align:right; }
+
+    .toast{
+      position: fixed;
+      bottom: 14px;
+      right: 14px;
+      max-width: 420px;
+      background: rgba(10,14,22,.92);
+      border:1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px 12px;
+      box-shadow: 0 10px 35px rgba(0,0,0,.35);
+      display:none;
+    }
+    .toast.show{ display:block; }
+    .toast .t{ font-weight:800; font-size: 13px; margin: 0 0 6px; }
+    .toast .m{ margin:0; color: var(--muted); font-size: 12.5px; line-height:1.35; }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>BossMind Admin — Automation Center</h1>
+          <p>3 Projects • Queue • Switches • Jobs • Logs • Health</p>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button class="btn primary" id="btnRefreshAll">↻ Refresh All</button>
+        <button class="btn good" id="btnRunHealth">✔ Run Health Check</button>
+        <button class="btn warn" id="btnSyncAll">⇄ Sync (Sheet / DB / Config)</button>
+      </div>
+    </header>
+
+    <div class="tabs" role="tablist" aria-label="Projects">
+      <button class="tab active" data-tab="builder" role="tab">Project 1 — AI Builder</button>
+      <button class="tab" data-tab="video" role="tab">Project 2 — AI Video Generator</button>
+      <button class="tab" data-tab="status" role="tab">Project 3 — AI Status / DevOps</button>
+    </div>
+
+    <div class="grid">
+      <!-- LEFT: MAIN -->
+      <section class="card">
+        <div class="hd">
+          <h2 id="panelTitle">Project 1 — AI Builder</h2>
+          <div class="row">
+            <span class="pill" title="Backend status">
+              <span class="dot" id="dotBackend"></span>
+              <span id="lblBackend">Backend: unknown</span>
+            </span>
+            <span class="pill" title="Last refresh time">
+              ⏱ <span id="lblLast">—</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="bd" id="panelBody">
+
+          <!-- COMMON CONNECTION -->
+          <div class="box">
+            <p class="secTitle">Connection</p>
+            <div class="split">
+              <div>
+                <label>API Base URL (Railway / Production)</label>
+                <input id="baseUrl" placeholder="https://your-service.up.railway.app" />
+                <div class="hint">This page calls your backend endpoints using this base URL.</div>
+              </div>
+              <div>
+                <label>Admin Key (optional)</label>
+                <input id="adminKey" placeholder="(if your backend requires x-admin-key)" />
+                <div class="hint">If enabled on backend: sent as header <span class="mono">x-admin-key</span>.</div>
+              </div>
+            </div>
+            <div class="row" style="margin-top:10px;">
+              <button class="btn mini primary" id="btnSaveConn">Save</button>
+              <button class="btn mini" id="btnPing">Ping</button>
+            </div>
+          </div>
+
+          <div class="hr"></div>
+
+          <!-- DYNAMIC PROJECT PANELS -->
+          <div id="projectPanel"></div>
+
+        </div>
+      </section>
+
+      <!-- RIGHT: LOGS + SWITCHES -->
+      <aside class="card">
+        <div class="hd">
+          <h2>Control + Logs</h2>
+          <div class="row">
+            <button class="btn mini" id="btnLoadLogs">Load Logs</button>
+            <button class="btn mini" id="btnAutoLogs">Auto</button>
+          </div>
+        </div>
+
+        <div class="bd">
+          <div class="box">
+            <p class="secTitle">Maintenance + Switch Control (UI Ready)</p>
+            <div class="kv">
+              <div>
+                <label>Maintenance Mode</label>
+                <select id="selMaintenance">
+                  <option value="off">OFF</option>
+                  <option value="on">ON</option>
+                  <option value="auto">AUTO (Backend decides)</option>
+                </select>
+              </div>
+              <div>
+                <label>Feature Switch Set</label>
+                <select id="selSwitchSet">
+                  <option value="builder">AI Builder</option>
+                  <option value="video">AI Video Generator</option>
+                  <option value="status">AI Status / DevOps</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="kv" style="margin-top:10px;">
+              <div class="box" style="padding:10px;">
+                <div class="row" style="justify-content:space-between;">
+                  <span class="small">DeepSeek</span>
+                  <button class="btn mini" data-switch="deepseek" data-val="toggle">Toggle</button>
+                </div>
+                <div class="row" style="justify-content:space-between;margin-top:8px;">
+                  <span class="small">Stripe Logs</span>
+                  <button class="btn mini" data-switch="stripe_logs" data-val="toggle">Toggle</button>
+                </div>
+                <div class="row" style="justify-content:space-between;margin-top:8px;">
+                  <span class="small">Webhook Triggers</span>
+                  <button class="btn mini" data-switch="webhooks" data-val="toggle">Toggle</button>
+                </div>
+              </div>
+
+              <div class="box" style="padding:10px;">
+                <div class="row" style="justify-content:space-between;">
+                  <span class="small">Auto-Disable on Errors</span>
+                  <button class="btn mini" data-switch="auto_disable" data-val="toggle">Toggle</button>
+                </div>
+                <div class="row" style="justify-content:space-between;margin-top:8px;">
+                  <span class="small">Backups</span>
+                  <button class="btn mini" data-switch="backups" data-val="toggle">Toggle</button>
+                </div>
+                <div class="row" style="justify-content:space-between;margin-top:8px;">
+                  <span class="small">Notifications</span>
+                  <button class="btn mini" data-switch="notify" data-val="toggle">Toggle</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="row" style="margin-top:10px;">
+              <button class="btn mini warn" id="btnApplyMaintenance">Apply Maintenance</button>
+              <button class="btn mini primary" id="btnFetchSwitches">Fetch Switches</button>
+            </div>
+
+            <div class="hint" style="margin-top:10px;">
+              Backend endpoints expected (recommended):
+              <div class="mono">GET /api/admin/switches?set=builder|video|status
+POST /api/admin/switches { set, key, action }
+POST /api/admin/maintenance { mode }</div>
+            </div>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="box">
+            <p class="secTitle">Logs</p>
+            <label>Log Filter</label>
+            <select id="selLogScope">
+              <option value="all">All</option>
+              <option value="builder">AI Builder</option>
+              <option value="video">AI Video Generator</option>
+              <option value="status">AI Status / DevOps</option>
+            </select>
+
+            <label style="margin-top:10px;">Output</label>
+            <textarea id="logOut" readonly placeholder="Logs will appear here..."></textarea>
+
+            <div class="row" style="margin-top:10px;">
+              <button class="btn mini" id="btnClearLogs">Clear</button>
+              <button class="btn mini" id="btnCopyLogs">Copy</button>
+            </div>
+
+            <div class="hint" style="margin-top:10px;">
+              Backend endpoint expected:
+              <div class="mono">GET /api/admin/logs?scope=all|builder|video|status</div>
+            </div>
+          </div>
+
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">
+    <p class="t" id="toastT">—</p>
+    <p class="m" id="toastM">—</p>
+  </div>
+
+  <script>
+    // =========================
+    // BossMind Automation Center
+    // =========================
+
+    const LS = {
+      baseUrl: "bossmind_base_url",
+      adminKey: "bossmind_admin_key",
+      activeTab: "bossmind_active_tab",
+      autoLogs: "bossmind_auto_logs"
+    };
+
+    const state = {
+      activeTab: "builder",
+      autoLogs: false,
+      autoLogsTimer: null
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const panelTitle = $("panelTitle");
+    const projectPanel = $("projectPanel");
+    const dotBackend = $("dotBackend");
+    const lblBackend = $("lblBackend");
+    const lblLast = $("lblLast");
+    const baseUrlInput = $("baseUrl");
+    const adminKeyInput = $("adminKey");
+    const logOut = $("logOut");
+
+    function toast(title, msg){
+      const box = $("toast");
+      $("toastT").textContent = title;
+      $("toastM").textContent = msg;
+      box.classList.add("show");
+      setTimeout(()=>box.classList.remove("show"), 3200);
+    }
+
+    function nowTime(){
+      const d = new Date();
+      return d.toLocaleString();
+    }
+
+    function setBackendBadge(ok, text){
+      dotBackend.classList.remove("good","warn","bad");
+      if(ok === true) dotBackend.classList.add("good");
+      else if(ok === false) dotBackend.classList.add("bad");
+      else dotBackend.classList.add("warn");
+      lblBackend.textContent = "Backend: " + (text || "unknown");
+    }
+
+    function loadConn(){
+      baseUrlInput.value = localStorage.getItem(LS.baseUrl) || "";
+      adminKeyInput.value = localStorage.getItem(LS.adminKey) || "";
+      state.activeTab = localStorage.getItem(LS.activeTab) || "builder";
+      state.autoLogs = (localStorage.getItem(LS.autoLogs) || "false") === "true";
+      updateAutoBtn();
+    }
+
+    function saveConn(){
+      localStorage.setItem(LS.baseUrl, (baseUrlInput.value || "").trim());
+      localStorage.setItem(LS.adminKey, (adminKeyInput.value || "").trim());
+      toast("Saved", "Connection settings saved.");
+    }
+
+    function getBaseUrl(){
+      return (baseUrlInput.value || "").trim().replace(/\/+$/,"");
+    }
+
+    function getHeaders(){
+      const headers = { "Content-Type": "application/json" };
+      const k = (adminKeyInput.value || "").trim();
+      if(k) headers["x-admin-key"] = k;
+      return headers;
+    }
+
+    async function apiGet(path){
+      const base = getBaseUrl();
+      if(!base) throw new Error("Missing API Base URL");
+      const res = await fetch(base + path, { method:"GET", headers: getHeaders() });
+      const ct = res.headers.get("content-type") || "";
+      let data = null;
+      if(ct.includes("application/json")) data = await res.json();
+      else data = await res.text();
+      if(!res.ok) throw new Error(typeof data === "string" ? data : (data?.error || "Request failed"));
+      return data;
+    }
+
+    async function apiPost(path, payload){
+      const base = getBaseUrl();
+      if(!base) throw new Error("Missing API Base URL");
+      const res = await fetch(base + path, { method:"POST", headers: getHeaders(), body: JSON.stringify(payload || {}) });
+      const ct = res.headers.get("content-type") || "";
+      let data = null;
+      if(ct.includes("application/json")) data = await res.json();
+      else data = await res.text();
+      if(!res.ok) throw new Error(typeof data === "string" ? data : (data?.error || "Request failed"));
+      return data;
+    }
+
+    // -------------------------
+    // Project panels
+    // -------------------------
+    function renderBuilder(){
+      panelTitle.textContent = "Project 1 — AI Builder";
+      projectPanel.innerHTML = `
+        <div class="box">
+          <p class="secTitle">Core Tasks</p>
+          <div class="row">
+            <button class="btn good" data-job="builder_preview">Generate Preview</button>
+            <button class="btn primary" data-job="builder_export">Export Layout</button>
+            <button class="btn warn" data-job="builder_sync_supabase">Sync Supabase</button>
+            <button class="btn" data-job="builder_theme_rotate">Rotate Theme</button>
+          </div>
+          <div class="hint" style="margin-top:10px;">
+            Recommended endpoint:
+            <div class="mono">POST /api/admin/jobs { job, scope }</div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="box">
+          <p class="secTitle">Status Snapshot</p>
+          <table class="table">
+            <thead><tr><th>Item</th><th class="right">Value</th></tr></thead>
+            <tbody id="tblBuilder">
+              <tr><td>Last Export</td><td class="right">—</td></tr>
+              <tr><td>Supabase Sync</td><td class="right">—</td></tr>
+              <tr><td>Active Theme</td><td class="right">—</td></tr>
+              <tr><td>Errors (24h)</td><td class="right">—</td></tr>
+            </tbody>
+          </table>
+          <div class="row" style="margin-top:10px;">
+            <button class="btn mini" id="btnBuilderStatus">Refresh Builder Status</button>
+          </div>
+          <div class="hint" style="margin-top:10px;">
+            Endpoint expected:
+            <div class="mono">GET /api/admin/status/builder</div>
+          </div>
+        </div>
+      `;
+
+      $("btnBuilderStatus").addEventListener("click", async ()=>{
+        try{
+          const data = await apiGet("/api/admin/status/builder");
+          fillTable("tblBuilder", [
+            ["Last Export", data?.lastExport || "—"],
+            ["Supabase Sync", data?.supabaseSync || "—"],
+            ["Active Theme", data?.activeTheme || "—"],
+            ["Errors (24h)", String(data?.errors24h ?? "—")]
+          ]);
+          toast("Builder", "Status refreshed.");
+        }catch(e){
+          toast("Builder Error", e.message);
+        }
+      });
+    }
+
+    function renderVideo(){
+      panelTitle.textContent = "Project 2 — AI Video Generator";
+      projectPanel.innerHTML = `
+        <div class="box">
+          <p class="secTitle">Google Sheet → Queue</p>
+          <div class="split">
+            <div>
+              <label>Sheet ID</label>
+              <input id="sheetId" placeholder="e.g. 14U3v1F597jKojJm0jZ1iK2Bbo2mJeYWXH7e5M16lvRU" />
+            </div>
+            <div>
+              <label>Tab / Worksheet Name</label>
+              <input id="sheetTab" placeholder="e.g. AI Cinematic Script Automation" />
+            </div>
+          </div>
+          <div class="row" style="margin-top:10px;">
+            <button class="btn primary" id="btnAttachSheet">Attach Sheet</button>
+            <button class="btn warn" id="btnSyncQueue">Sync Queue Now</button>
+          </div>
+          <div class="hint" style="margin-top:10px;">
+            Endpoints expected:
+            <div class="mono">POST /api/admin/queue/sheet { sheetId, tab }
+POST /api/admin/queue/sync</div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="box">
+          <p class="secTitle">Video Type</p>
+          <div class="split">
+            <div>
+              <label>Category</label>
+              <select id="videoType">
+                <option value="Entertainment">Entertainment</option>
+                <option value="Funny">Funny</option>
+                <option value="Drama">Drama</option>
+                <option value="Thriller">Thriller</option>
+                <option value="Adventure">Adventure</option>
+                <option value="Action">Action</option>
+                <option value="Kids">Kids</option>
+                <option value="Motivational">Motivational</option>
+                <option value="Horror">Horror</option>
+              </select>
+            </div>
+            <div>
+              <label>Mode</label>
+              <select id="videoMode">
+                <option value="short">YouTube Short</option>
+                <option value="full">Full Video</option>
+              </select>
+            </div>
+          </div>
+          <div class="row" style="margin-top:10px;">
+            <button class="btn primary" id="btnSetVideoType">Save Selection</button>
+          </div>
+          <div class="hint" style="margin-top:10px;">
+            Endpoint expected:
+            <div class="mono">POST /api/admin/video/type { type, mode }</div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="box">
+          <p class="secTitle">Run Pipeline Jobs</p>
+          <div class="row">
+            <button class="btn good" data-job="video_review_script">Review Script</button>
+            <button class="btn primary" data-job="video_generate_scenes">Generate Scenes</button>
+            <button class="btn warn" data-job="video_render">Render Video</button>
+            <button class="btn" data-job="video_upload">Upload</button>
+            <button class="btn good" data-job="video_publish">Publish</button>
+          </div>
+          <div class="hint" style="margin-top:10px;">
+            Endpoint expected:
+            <div class="mono">POST /api/admin/jobs { job, scope }</div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="box">
+          <p class="secTitle">Queue Snapshot</p>
+          <table class="table">
+            <thead><tr><th>Item</th><th class="right">Value</th></tr></thead>
+            <tbody id="tblVideo">
+              <tr><td>Queue Length</td><td class="right">—</td></tr>
+              <tr><td>Next Item</td><td class="right">—</td></tr>
+              <tr><td>Last Publish</td><td class="right">—</td></tr>
+              <tr><td>Errors (24h)</td><td class="right">—</td></tr>
+            </tbody>
+          </table>
+          <div class="row" style="margin-top:10px;">
+            <button class="btn mini" id="btnVideoStatus">Refresh Video Status</button>
+          </div>
+          <div class="hint" style="margin-top:10px;">
+            Endpoint expected:
+            <div class="mono">GET /api/admin/status/video</div>
+          </div>
+        </div>
+      `;
+
+      $("btnAttachSheet").addEventListener("click", async ()=>{
+        try{
+          const sheetId = ($("sheetId").value || "").trim();
+          const tab = ($("sheetTab").value || "").trim();
+          if(!sheetId) throw new Error("Sheet ID is required");
+          const out = await apiPost("/api/admin/queue/sheet", { sheetId, tab });
+          toast("Sheet Attached", (out?.message || "Sheet linked to queue."));
+        }catch(e){
+          toast("Sheet Error", e.message);
+        }
+      });
+
+      $("btnSyncQueue").addEventListener("click", async ()=>{
+        try{
+          const out = await apiPost("/api/admin/queue/sync", {});
+          toast("Queue Sync", (out?.message || "Queue sync triggered."));
+        }catch(e){
+          toast("Queue Error", e.message);
+        }
+      });
+
+      $("btnSetVideoType").addEventListener("click", async ()=>{
+        try{
+          const type = $("videoType").value;
+          const mode = $("videoMode").value;
+          const out = await apiPost("/api/admin/video/type", { type, mode });
+          toast("Video Type Saved", (out?.message || `${type} • ${mode}`));
+        }catch(e){
+          toast("Video Type Error", e.message);
+        }
+      });
+
+      $("btnVideoStatus").addEventListener("click", async ()=>{
+        try{
+          const data = await apiGet("/api/admin/status/video");
+          fillTable("tblVideo", [
+            ["Queue Length", String(data?.queueLength ?? "—")],
+            ["Next Item", data?.nextItem || "—"],
+            ["Last Publish", data?.lastPublish || "—"],
+            ["Errors (24h)", String(data?.errors24h ?? "—")]
+          ]);
+          toast("Video", "Status refreshed.");
+        }catch(e){
+          toast("Video Error", e.message);
+        }
+      });
+    }
+
+    function renderStatus(){
+      panelTitle.textContent = "Project 3 — AI Status / DevOps";
+      projectPanel.innerHTML = `
+        <div class="box">
+          <p class="secTitle">System Health + Guardian</p>
+          <div class="row">
+            <button class="btn good" data-job="status_health_full">Full Health Scan</button>
+            <button class="btn warn" data-job="status_incident_report">Incident Report</button>
+            <button class="btn primary" data-job="status_self_heal">Self-Heal Attempt</button>
+          </div>
+          <div class="hint" style="margin-top:10px;">
+            Endpoint expected:
+            <div class="mono">POST /api/admin/jobs { job, scope }</div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="box">
+          <p class="secTitle">Backup + Sync</p>
+          <div class="row">
+            <button class="btn primary" data-job="backup_all_now">Backup All Systems Now</button>
+            <button class="btn" data-job="backup_supabase">Backup Supabase</button>
+            <button class="btn" data-job="backup_github">Backup GitHub</button>
+          </div>
+          <div class="hint" style="margin-top:10px;">
+            Endpoint expected:
+            <div class="mono">POST /api/admin/jobs { job, scope }</div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="box">
+          <p class="secTitle">Status Snapshot</p>
+          <table class="table">
+            <thead><tr><th>Item</th><th class="right">Value</th></tr></thead>
+            <tbody id="tblStatus">
+              <tr><td>Health</td><td class="right">—</td></tr>
+              <tr><td>Guardian</td><td class="right">—</td></tr>
+              <tr><td>Last Backup</td><td class="right">—</td></tr>
+              <tr><td>Open Incidents</td><td class="right">—</td></tr>
+            </tbody>
+          </table>
+          <div class="row" style="margin-top:10px;">
+            <button class="btn mini" id="btnStatusRefresh">Refresh Status</button>
+          </div>
+          <div class="hint" style="margin-top:10px;">
+            Endpoint expected:
+            <div class="mono">GET /api/admin/status/system</div>
+          </div>
+        </div>
+      `;
+
+      $("btnStatusRefresh").addEventListener("click", async ()=>{
+        try{
+          const data = await apiGet("/api/admin/status/system");
+          fillTable("tblStatus", [
+            ["Health", data?.health || "—"],
+            ["Guardian", data?.guardian || "—"],
+            ["Last Backup", data?.lastBackup || "—"],
+            ["Open Incidents", String(data?.openIncidents ?? "—")]
+          ]);
+          toast("Status", "System snapshot refreshed.");
+        }catch(e){
+          toast("Status Error", e.message);
+        }
+      });
+    }
+
+    function fillTable(tbodyId, rows){
+      const el = document.getElementById(tbodyId);
+      if(!el) return;
+      el.innerHTML = rows.map(([k,v]) => `<tr><td>${escapeHtml(k)}</td><td class="right">${escapeHtml(String(v))}</td></tr>`).join("");
+    }
+
+    function escapeHtml(str){
+      return String(str)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    // -------------------------
+    // Tabs + Rendering
+    // -------------------------
+    function setTab(tab){
+      state.activeTab = tab;
+      localStorage.setItem(LS.activeTab, tab);
+      document.querySelectorAll(".tab").forEach(b=>{
+        b.classList.toggle("active", b.dataset.tab === tab);
+      });
+
+      if(tab === "builder") renderBuilder();
+      if(tab === "video") renderVideo();
+      if(tab === "status") renderStatus();
+
+      wireJobButtons();
+      lblLast.textContent = nowTime();
+    }
+
+    function wireJobButtons(){
+      document.querySelectorAll("[data-job]").forEach(btn=>{
+        btn.addEventListener("click", async ()=>{
+          const job = btn.getAttribute("data-job");
+          const original = btn.textContent;
+          try{
+            btn.disabled = true;
+            btn.textContent = "Running…";
+            const out = await apiPost("/api/admin/jobs", { job, scope: state.activeTab });
+            toast("Job Triggered", out?.message || job);
+            await loadLogs();
+          }catch(e){
+            toast("Job Error", e.message);
+          }finally{
+            btn.disabled = false;
+            btn.textContent = original;
+            lblLast.textContent = nowTime();
+          }
+        });
+      });
+    }
+
+    // -------------------------
+    // Health, Logs, Switches
+    // -------------------------
+    async function ping(){
+      try{
+        const data = await apiGet("/health");
+        setBackendBadge(true, "ok");
+        toast("Ping OK", typeof data === "string" ? data : "Health endpoint responded.");
+      }catch(e){
+        setBackendBadge(false, "down");
+        toast("Ping Failed", e.message);
+      }finally{
+        lblLast.textContent = nowTime();
+      }
+    }
+
+    async function runHealth(){
+      try{
+        let data;
+        try{
+          data = await apiGet("/api/admin/health");
+        }catch(_){
+          data = await apiGet("/health");
+        }
+        setBackendBadge(true, "ok");
+        toast("Health Check", "Completed.");
+        logOut.value = (typeof data === "string") ? data : JSON.stringify(data, null, 2);
+      }catch(e){
+        setBackendBadge(false, "down");
+        toast("Health Error", e.message);
+      }finally{
+        lblLast.textContent = nowTime();
+      }
+    }
+
+    async function loadLogs(){
+      try{
+        const scope = $("selLogScope").value;
+        const data = await apiGet(`/api/admin/logs?scope=${encodeURIComponent(scope)}`);
+        logOut.value = (typeof data === "string") ? data : JSON.stringify(data, null, 2);
+        lblLast.textContent = nowTime();
+      }catch(e){
+        toast("Logs Error", e.message);
+      }
+    }
+
+    function updateAutoBtn(){
+      $("btnAutoLogs").textContent = state.autoLogs ? "Auto: ON" : "Auto: OFF";
+      $("btnAutoLogs").classList.toggle("good", state.autoLogs);
+    }
+
+    function toggleAutoLogs(){
+      state.autoLogs = !state.autoLogs;
+      localStorage.setItem(LS.autoLogs, String(state.autoLogs));
+      updateAutoBtn();
+
+      if(state.autoLogs){
+        if(state.autoLogsTimer) clearInterval(state.autoLogsTimer);
+        state.autoLogsTimer = setInterval(loadLogs, 5000);
+        toast("Logs", "Auto refresh enabled (5s).");
+      }else{
+        if(state.autoLogsTimer) clearInterval(state.autoLogsTimer);
+        state.autoLogsTimer = null;
+        toast("Logs", "Auto refresh disabled.");
+      }
+    }
+
+    async function applyMaintenance(){
+      try{
+        const mode = $("selMaintenance").value;
+        const out = await apiPost("/api/admin/maintenance", { mode });
+        toast("Maintenance", out?.message || ("Applied: " + mode));
+      }catch(e){
+        toast("Maintenance Error", e.message);
+      }
+    }
+
+    async function fetchSwitches(){
+      try{
+        const set = $("selSwitchSet").value;
+        const out = await apiGet(`/api/admin/switches?set=${encodeURIComponent(set)}`);
+        toast("Switches", out?.message || "Fetched (see logs output).");
+        logOut.value = (typeof out === "string") ? out : JSON.stringify(out, null, 2);
+      }catch(e){
+        toast("Switch Error", e.message);
+      }
+    }
+
+    async function toggleSwitch(key){
+      try{
+        const set = $("selSwitchSet").value;
+        const out = await apiPost("/api/admin/switches", { set, key, action: "toggle" });
+        toast("Switch Updated", out?.message || (key + " toggled"));
+        await fetchSwitches();
+      }catch(e){
+        toast("Switch Error", e.message);
+      }
+    }
+
+    async function syncAll(){
+      try{
+        const out = await apiPost("/api/admin/sync", { scope: "all" });
+        toast("Sync Triggered", out?.message || "Sync started.");
+        await loadLogs();
+      }catch(e){
+        toast("Sync Error", e.message);
+      }
+    }
+
+    // -------------------------
+    // Global wiring
+    // -------------------------
+    document.querySelectorAll(".tab").forEach(btn=>{
+      btn.addEventListener("click", ()=> setTab(btn.dataset.tab));
+    });
+
+    $("btnSaveConn").addEventListener("click", saveConn);
+    $("btnPing").addEventListener("click", ping);
+    $("btnRefreshAll").addEventListener("click", async ()=>{
+      await runHealth();
+      await loadLogs();
+      toast("Refreshed", "Health + logs refreshed.");
+    });
+    $("btnRunHealth").addEventListener("click", runHealth);
+    $("btnLoadLogs").addEventListener("click", loadLogs);
+    $("btnAutoLogs").addEventListener("click", toggleAutoLogs);
+    $("btnClearLogs").addEventListener("click", ()=> logOut.value = "");
+    $("btnCopyLogs").addEventListener("click", async ()=>{
+      try{
+        await navigator.clipboard.writeText(logOut.value || "");
+        toast("Copied", "Logs copied to clipboard.");
+      }catch(e){
+        toast("Copy Error", "Clipboard not available.");
+      }
+    });
+
+    $("btnApplyMaintenance").addEventListener("click", applyMaintenance);
+    $("btnFetchSwitches").addEventListener("click", fetchSwitches);
+
+    document.querySelectorAll("[data-switch]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const key = btn.getAttribute("data-switch");
+        toggleSwitch(key);
+      });
+    });
+
+    $("btnSyncAll").addEventListener("click", syncAll);
+
+    // init
+    loadConn();
+    setTab(state.activeTab);
+    lblLast.textContent = nowTime();
+    setBackendBadge(null, "unknown");
+    setTimeout(ping, 250);
+  </script>
+</body>
+</html>
