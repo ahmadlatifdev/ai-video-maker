@@ -2,6 +2,19 @@
 const path = require("path");
 const express = require("express");
 
+app.get("/__debug/files", (req, res) => {
+  const fs = require("fs");
+  const p1 = path.join(__dirname, "public");
+  const exists = fs.existsSync(p1);
+  const list = exists ? fs.readdirSync(p1) : [];
+  res.json({
+    __dirname,
+    publicPath: p1,
+    publicExists: exists,
+    publicFiles: list
+  });
+});
+
 const app = express();
 
 // ---------- MIDDLEWARE ----------
