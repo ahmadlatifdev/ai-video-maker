@@ -11,6 +11,19 @@ app.use(express.json({ limit: "2mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
 // ---------- HEALTH ----------
+// ✅ DIRECT ROUTES (force-serve HTML from /public)
+app.get("/automation.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "automation.html"));
+});
+
+app.get("/admin.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "admin.html"));
+});
+
+app.get("/admin", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "admin.html"));
+});
+
 app.get("/health", (req, res) => {
   res.json({
     status: "ok",
