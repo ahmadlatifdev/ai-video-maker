@@ -1,22 +1,23 @@
-// automation.js — COMPLETE & FINAL
+// automation.js — COMPLETE (CommonJS, Railway-safe)
 
-import express from "express";
+const express = require("express");
 
 const app = express();
 
 // Railway-required dynamic port
 const PORT = process.env.PORT || 8080;
 
-// Health check (Railway + BossMind)
+// Root page
 app.get("/", (req, res) => {
   res.status(200).send("BossMind AI Video Maker — ACTIVE");
 });
 
+// Health endpoint
 app.get("/health", (req, res) => {
   res.json({
     status: "ok",
     service: "BossMind Core API",
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
