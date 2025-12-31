@@ -1,4 +1,3 @@
-<!-- public/automation.html -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -11,1053 +10,969 @@
       --bg:#0b0f16;
       --panel:#0f1623;
       --panel2:#0c1220;
-      --text:#e9eefc;
-      --muted:#a9b6d6;
+      --card:#111b2b;
       --line:rgba(255,255,255,.08);
-      --good:#19c37d;
-      --warn:#fbbf24;
-      --bad:#ef4444;
-      --accent:#7c3aed;
-      --accent2:#22c55e;
-      --shadow:0 10px 35px rgba(0,0,0,.35);
-      --radius:18px;
-      --radius2:14px;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      --text:#e7eaf1;
+      --muted:#a7b0c0;
+      --ok:#1ee3a5;
+      --warn:#f5c542;
+      --bad:#ff4d6d;
+      --brand1:#7c3aed;
+      --brand2:#22c55e;
+      --brand3:#f59e0b;
+      --chip:#121b2a;
+      --shadow: 0 18px 50px rgba(0,0,0,.45);
+      --radius: 16px;
+      --radius2: 22px;
     }
 
-    *{box-sizing:border-box}
+    /* ✅ IMPORTANT: No zoom, no transform scale — prevents "tiny centered" layout */
+    * { box-sizing: border-box; }
+    html,body { height:100%; }
     body{
       margin:0;
-      font-family:var(--sans);
-      background: radial-gradient(900px 500px at 15% 10%, rgba(124,58,237,.18), transparent 60%),
-                  radial-gradient(800px 500px at 85% 15%, rgba(34,197,94,.12), transparent 55%),
-                  var(--bg);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
       color:var(--text);
+      background:
+        radial-gradient(1100px 600px at 12% 18%, rgba(124,58,237,.35), transparent 60%),
+        radial-gradient(900px 500px at 88% 20%, rgba(34,197,94,.18), transparent 55%),
+        radial-gradient(900px 700px at 85% 85%, rgba(245,158,11,.16), transparent 60%),
+        linear-gradient(180deg, #070a10, var(--bg));
+      overflow-x:hidden;
     }
 
     .wrap{
-      max-width: 1240px;
-      margin: 0 auto;
-      padding: 18px 16px 30px;
+      width: min(1320px, calc(100% - 32px));
+      margin: 24px auto 40px;
     }
 
-    header{
+    .topbar{
       display:flex;
-      align-items:center;
+      gap:16px;
+      align-items:flex-start;
       justify-content:space-between;
-      gap:12px;
-      padding: 10px 2px 18px;
+      padding: 16px 16px 8px;
+      border:1px solid var(--line);
+      background: rgba(15,22,35,.70);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius2);
+      box-shadow: var(--shadow);
     }
 
     .brand{
       display:flex;
-      align-items:center;
       gap:12px;
-      min-width: 260px;
+      align-items:center;
+      min-width: 280px;
     }
     .logo{
-      width:46px;height:46px;border-radius:14px;
-      background: linear-gradient(135deg, rgba(124,58,237,.95), rgba(34,197,94,.85));
-      box-shadow: 0 10px 35px rgba(0,0,0,.35);
+      width:44px;height:44px;border-radius:14px;
+      background: linear-gradient(135deg, rgba(124,58,237,1), rgba(34,197,94,1));
+      box-shadow: 0 10px 30px rgba(124,58,237,.25);
     }
-    .brand h1{
+    .title{
+      display:flex;flex-direction:column;gap:2px;
+    }
+    .title h1{
       margin:0;
-      font-size: 18px;
-      letter-spacing:.2px;
+      font-size: 16px;
+      font-weight: 750;
+      letter-spacing: .2px;
     }
-    .brand p{
-      margin:2px 0 0;
-      font-size:12.5px;
-      color:var(--muted);
+    .title p{
+      margin:0;
+      font-size: 12px;
+      color: var(--muted);
+      opacity:.95;
     }
 
-    .top-actions{
+    .actions{
       display:flex;
       gap:10px;
-      flex-wrap:wrap;
+      flex-wrap: wrap;
       justify-content:flex-end;
+      padding-top: 2px;
     }
 
     .btn{
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.03);
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      justify-content:center;
+      border: 1px solid var(--line);
+      background: rgba(17,27,43,.72);
       color: var(--text);
       padding: 10px 12px;
-      border-radius: 14px;
+      border-radius: 999px;
+      font-weight: 650;
+      font-size: 12px;
       cursor:pointer;
-      font-weight:600;
-      font-size: 13px;
-      transition: transform .06s ease, background .2s ease, border-color .2s ease;
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
       user-select:none;
+      transition: transform .12s ease, background .12s ease, border-color .12s ease;
       white-space:nowrap;
     }
-    .btn:hover{ background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.14); }
-    .btn:active{ transform: translateY(1px); }
-    .btn.primary{ background: rgba(124,58,237,.22); border-color: rgba(124,58,237,.45); }
-    .btn.good{ background: rgba(34,197,94,.18); border-color: rgba(34,197,94,.4); }
-    .btn.warn{ background: rgba(251,191,36,.14); border-color: rgba(251,191,36,.35); }
-    .btn.bad{ background: rgba(239,68,68,.14); border-color: rgba(239,68,68,.35); }
-    .btn.mini{ padding: 8px 10px; border-radius: 12px; font-size: 12.5px; }
+    .btn:hover{ transform: translateY(-1px); background: rgba(20,33,54,.78); border-color: rgba(255,255,255,.14); }
+    .btn:active{ transform: translateY(0px); }
+    .btn.purple{ background: rgba(124,58,237,.18); border-color: rgba(124,58,237,.35); }
+    .btn.green{ background: rgba(34,197,94,.14); border-color: rgba(34,197,94,.30); }
+    .btn.gold{ background: rgba(245,158,11,.14); border-color: rgba(245,158,11,.30); }
+    .btn.ghost{ background: rgba(17,27,43,.40); }
 
-    .grid{
+    .row{
       display:grid;
-      grid-template-columns: 1.2fr .8fr;
-      gap: 14px;
+      grid-template-columns: 1.25fr .95fr;
+      gap: 16px;
+      margin-top: 14px;
     }
-    @media (max-width: 980px){
-      .grid{ grid-template-columns: 1fr; }
-      header{ flex-direction:column; align-items:flex-start; }
-      .top-actions{ width:100%; justify-content:flex-start; }
+    @media (max-width: 1100px){
+      .row{ grid-template-columns: 1fr; }
+      .actions{ justify-content:flex-start; }
     }
-
-    .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.02));
-      border:1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: 0 10px 35px rgba(0,0,0,.35);
-      overflow:hidden;
-    }
-    .card .hd{
-      padding: 14px 14px 12px;
-      border-bottom: 1px solid var(--line);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      background: rgba(0,0,0,.18);
-    }
-    .card .hd h2{
-      margin:0;
-      font-size: 14px;
-      letter-spacing:.2px;
-    }
-    .card .bd{ padding: 14px; }
 
     .tabs{
       display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-bottom: 12px;
-    }
-    .tab{
-      padding: 10px 12px;
-      border-radius: 14px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.02);
-      cursor:pointer;
-      font-weight:700;
-      font-size: 13px;
-      color: var(--muted);
-    }
-    .tab.active{
-      color: var(--text);
-      background: rgba(124,58,237,.18);
-      border-color: rgba(124,58,237,.45);
-    }
-
-    .row{
-      display:flex;
       gap:10px;
+      padding: 10px 12px 14px;
       flex-wrap:wrap;
       align-items:center;
     }
-    .pill{
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.02);
-      padding: 7px 10px;
+    .tab{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding: 9px 12px;
       border-radius: 999px;
+      border:1px solid var(--line);
+      background: rgba(17,27,43,.55);
+      color: var(--text);
+      cursor:pointer;
+      font-weight: 700;
       font-size: 12px;
-      color: var(--muted);
+      transition: background .12s ease, border-color .12s ease;
+    }
+    .tab:hover{ background: rgba(20,33,54,.70); border-color: rgba(255,255,255,.14); }
+    .tab.active{
+      background: rgba(124,58,237,.22);
+      border-color: rgba(124,58,237,.40);
+      box-shadow: 0 10px 28px rgba(124,58,237,.12);
+    }
+    .pill{
       display:inline-flex;
       align-items:center;
       gap:8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(17,27,43,.55);
+      font-size: 12px;
+      color: var(--muted);
+      margin-left:auto;
+      white-space:nowrap;
     }
     .dot{
-      width:8px;height:8px;border-radius:50%;
-      background: var(--muted);
-      box-shadow: 0 0 12px rgba(255,255,255,.08);
+      width:9px;height:9px;border-radius:99px;
+      background: var(--bad);
+      box-shadow: 0 0 0 3px rgba(255,77,109,.12);
     }
-    .dot.good{ background: var(--good); box-shadow: 0 0 14px rgba(25,195,125,.35); }
-    .dot.warn{ background: var(--warn); box-shadow: 0 0 14px rgba(251,191,36,.25); }
-    .dot.bad{ background: var(--bad); box-shadow: 0 0 14px rgba(239,68,68,.25); }
+
+    .card{
+      border:1px solid var(--line);
+      background: rgba(15,22,35,.65);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius2);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .cardHeader{
+      padding: 14px 14px 10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      background: rgba(12,18,32,.25);
+    }
+    .cardHeader h2{
+      margin:0;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .2px;
+    }
+    .sub{
+      margin:0;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .section{
+      padding: 14px;
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+    }
+    .grid2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 680px){
+      .grid2{ grid-template-columns: 1fr; }
+      .pill{ margin-left:0; width: fit-content; }
+    }
+
+    .box{
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(12,18,32,.42);
+      border-radius: var(--radius);
+      padding: 12px;
+    }
 
     label{
       font-size: 12px;
+      font-weight: 750;
       color: var(--muted);
       display:block;
-      margin: 10px 0 6px;
+      margin-bottom: 6px;
     }
-    input, select, textarea{
+    .input{
       width:100%;
-      padding: 11px 12px;
-      border-radius: 14px;
-      border:1px solid var(--line);
-      background: rgba(0,0,0,.25);
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(8,12,18,.65);
       color: var(--text);
       outline:none;
-      font-size: 13.5px;
-    }
-    textarea{ min-height: 110px; font-family: var(--mono); font-size: 12.7px; line-height:1.35; }
-
-    .split{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-    @media (max-width: 680px){ .split{ grid-template-columns: 1fr; } }
-
-    .secTitle{
-      margin: 0 0 8px;
-      font-size: 12.5px;
-      color: var(--muted);
-      letter-spacing: .2px;
-    }
-
-    .hr{
-      height:1px;
-      background: var(--line);
-      margin: 12px 0;
-    }
-
-    .mono{
-      font-family: var(--mono);
-      font-size: 12.5px;
-      color: rgba(233,238,252,.92);
-      white-space:pre-wrap;
-      word-break:break-word;
-    }
-
-    .hint{
-      color: var(--muted);
+      font-weight: 650;
       font-size: 12px;
+    }
+    .hint{
+      margin-top: 8px;
+      font-size: 11px;
+      color: rgba(167,176,192,.85);
       line-height: 1.35;
     }
 
-    .small{
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .kv{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
+    .btnRow{
+      display:flex;
       gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
     }
-    @media (max-width: 680px){ .kv{ grid-template-columns: 1fr; } }
 
-    .box{
-      border:1px solid var(--line);
-      background: rgba(0,0,0,.22);
-      border-radius: var(--radius2);
-      padding: 12px;
+    .taskRow{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
     }
 
     .table{
       width:100%;
       border-collapse: collapse;
-      font-size: 12.5px;
+      overflow:hidden;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(8,12,18,.45);
     }
-    .table th,.table td{
-      border-bottom:1px solid var(--line);
-      padding: 9px 6px;
+    .table th, .table td{
+      padding: 10px 10px;
       text-align:left;
-      color: rgba(233,238,252,.92);
+      font-size: 12px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
     }
-    .table th{ color: var(--muted); font-weight: 700; }
-    .right{ text-align:right; }
+    .table th{
+      color: var(--muted);
+      font-weight: 800;
+      background: rgba(12,18,32,.35);
+    }
+    .table td{
+      color: rgba(231,234,241,.92);
+      font-weight: 650;
+    }
+    .table tr:last-child td{ border-bottom:none; }
 
-    .toast{
-      position: fixed;
-      bottom: 14px;
-      right: 14px;
-      max-width: 420px;
-      background: rgba(10,14,22,.92);
-      border:1px solid var(--line);
-      border-radius: 16px;
-      padding: 12px 12px;
-      box-shadow: 0 10px 35px rgba(0,0,0,.35);
-      display:none;
+    .rightTop{
+      display:flex;
+      align-items:center;
+      gap:10px;
     }
-    .toast.show{ display:block; }
-    .toast .t{ font-weight:800; font-size: 13px; margin: 0 0 6px; }
-    .toast .m{ margin:0; color: var(--muted); font-size: 12.5px; line-height:1.35; }
+
+    .select{
+      width:100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(8,12,18,.65);
+      color: var(--text);
+      outline:none;
+      font-weight: 750;
+      font-size: 12px;
+    }
+
+    .logBox{
+      height: 220px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(8,12,18,.52);
+      padding: 10px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 11px;
+      overflow:auto;
+      color: rgba(231,234,241,.88);
+      line-height: 1.35;
+      white-space: pre-wrap;
+    }
+
+    .muted{ color: var(--muted); }
+    .kpi{
+      display:flex; gap:10px; flex-wrap:wrap;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(18,27,42,.55);
+      font-size: 12px;
+      font-weight: 750;
+      color: rgba(231,234,241,.92);
+      white-space:nowrap;
+    }
+    .chip .dot{ width:8px;height:8px; box-shadow:none; }
+    .chip.ok .dot{ background: var(--ok); }
+    .chip.warn .dot{ background: var(--warn); }
+    .chip.bad .dot{ background: var(--bad); }
+
+    .footerNote{
+      margin-top: 12px;
+      font-size: 11px;
+      color: rgba(167,176,192,.8);
+    }
+
+    /* Panels */
+    .panel{ display:none; }
+    .panel.active{ display:block; }
   </style>
 </head>
 
 <body>
   <div class="wrap">
-    <header>
+    <div class="topbar">
       <div class="brand">
         <div class="logo" aria-hidden="true"></div>
-        <div>
+        <div class="title">
           <h1>BossMind Admin — Automation Center</h1>
           <p>3 Projects • Queue • Switches • Jobs • Logs • Health</p>
         </div>
       </div>
 
-      <div class="top-actions">
-        <button class="btn primary" id="btnRefreshAll">↻ Refresh All</button>
-        <button class="btn good" id="btnRunHealth">✔ Run Health Check</button>
-        <button class="btn warn" id="btnSyncAll">⇄ Sync (Sheet / DB / Config)</button>
+      <div class="actions">
+        <button class="btn purple" id="btnRefreshAll">↻ Refresh All</button>
+        <button class="btn green" id="btnHealth">✓ Run Health Check</button>
+        <button class="btn gold" id="btnSyncAll">⇄ Sync (Sheet / DB / Config)</button>
       </div>
-    </header>
+    </div>
 
-    <div class="tabs" role="tablist" aria-label="Projects">
-      <button class="tab active" data-tab="builder" role="tab">Project 1 — AI Builder</button>
-      <button class="tab" data-tab="video" role="tab">Project 2 — AI Video Generator</button>
-      <button class="tab" data-tab="status" role="tab">Project 3 — AI Stock System
+    <!-- ✅ TABS: Project 3 aligned exactly like 1 & 2 -->
+    <div class="tabs">
+      <button class="tab active" data-tab="p1" id="tabP1">Project 1 — AI Builder</button>
+      <button class="tab" data-tab="p2" id="tabP2">Project 2 — AI Video Generator</button>
+      <button class="tab" data-tab="p3" id="tabP3">Project 3 — AI Stock System</button>
 
+      <div class="pill" title="UI status only. Backend status depends on API Base URL.">
+        <span class="dot" id="backendDot"></span>
+        <span id="backendText">Backend: down</span>
+        <span style="opacity:.55">•</span>
+        <span id="clockText"></span>
+      </div>
+    </div>
 
-    <div class="grid">
-      <!-- LEFT: MAIN -->
-      <section class="card">
-        <div class="hd">
-          <h2 id="panelTitle">Project 1 — AI Builder</h2>
-          <div class="row">
-            <span class="pill" title="Backend status">
-              <span class="dot" id="dotBackend"></span>
-              <span id="lblBackend">Backend: unknown</span>
-            </span>
-            <span class="pill" title="Last refresh time">
-              ⏱ <span id="lblLast">—</span>
-            </span>
+    <div class="row">
+      <!-- LEFT: Project panel -->
+      <div class="card">
+        <div class="cardHeader">
+          <div>
+            <h2 id="panelTitle">Project 1 — AI Builder</h2>
+            <p class="sub" id="panelSub">Core tasks, status snapshot, and connection</p>
           </div>
         </div>
 
-        <div class="bd" id="panelBody">
-
-          <!-- COMMON CONNECTION -->
+        <div class="section">
           <div class="box">
-            <p class="secTitle">Connection</p>
-            <div class="split">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
               <div>
-                <label>API Base URL (Railway / Production)</label>
-                <input id="baseUrl" placeholder="https://your-service.up.railway.app" />
+                <div style="font-weight:850; font-size:12px; margin-bottom:4px;">Connection</div>
+                <div class="muted" style="font-size:11px;">Set the API base URL used for all actions in this dashboard.</div>
+              </div>
+              <div class="kpi">
+                <span class="chip bad"><span class="dot"></span><span id="chipApi">API: not set</span></span>
+              </div>
+            </div>
+
+            <div class="grid2" style="margin-top:12px;">
+              <div>
+                <label for="apiBase">API Base URL (Railway / Production)</label>
+                <input class="input" id="apiBase" placeholder="https://your-service.up.railway.app" />
                 <div class="hint">This page calls your backend endpoints using this base URL.</div>
               </div>
               <div>
-                <label>Admin Key (optional)</label>
-                <input id="adminKey" placeholder="(if your backend requires x-admin-key)" />
-                <div class="hint">If enabled on backend: sent as header <span class="mono">x-admin-key</span>.</div>
+                <label for="adminKey">Admin Key (optional)</label>
+                <input class="input" id="adminKey" placeholder="(if your backend requires x-admin-key)" />
+                <div class="hint">If enabled on backend, it will be sent as header <b>x-admin-key</b>.</div>
               </div>
             </div>
-            <div class="row" style="margin-top:10px;">
-              <button class="btn mini primary" id="btnSaveConn">Save</button>
-              <button class="btn mini" id="btnPing">Ping</button>
+
+            <div class="btnRow">
+              <button class="btn purple" id="btnSaveConn">Save</button>
+              <button class="btn ghost" id="btnPing">Ping</button>
             </div>
           </div>
 
-          <div class="hr"></div>
+          <!-- PANELS -->
+          <div class="panel active" id="panelP1">
+            <div class="box">
+              <div style="font-weight:850; font-size:12px; margin-bottom:10px;">Core Tasks</div>
+              <div class="taskRow">
+                <button class="btn green" data-job="builder.generatePreview">Generate Preview</button>
+                <button class="btn purple" data-job="builder.exportLayout">Export Layout</button>
+                <button class="btn gold" data-job="builder.syncSupabase">Sync Supabase</button>
+                <button class="btn ghost" data-job="builder.rotateTheme">Rotate Theme</button>
+              </div>
+              <div class="footerNote">Recommended backend endpoint: <b>POST /api/admin/jobs</b> with <b>{ job, scope }</b>.</div>
+            </div>
 
-          <!-- DYNAMIC PROJECT PANELS -->
-          <div id="projectPanel"></div>
+            <div class="box">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+                <div style="font-weight:850; font-size:12px;">Status Snapshot</div>
+                <button class="btn ghost" id="btnRefreshStatus">Refresh Builder Status</button>
+              </div>
+              <div style="margin-top:10px;">
+                <table class="table">
+                  <thead>
+                    <tr><th style="width:55%">Item</th><th>Value</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>Last Export</td><td id="s1">—</td></tr>
+                    <tr><td>Supabase Sync</td><td id="s2">—</td></tr>
+                    <tr><td>Active Theme</td><td id="s3">—</td></tr>
+                    <tr><td>Errors (24h)</td><td id="s4">—</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="footerNote">Endpoint expected: <b>GET /api/admin/status/builder</b></div>
+            </div>
+          </div>
+
+          <div class="panel" id="panelP2">
+            <div class="box">
+              <div style="font-weight:850; font-size:12px; margin-bottom:10px;">Video Generator Tasks</div>
+              <div class="taskRow">
+                <button class="btn green" data-job="video.queueFromSheet">Queue from Google Sheet</button>
+                <button class="btn purple" data-job="video.reviewScenario">Scenario Review</button>
+                <button class="btn gold" data-job="video.renderNext">Render Next</button>
+                <button class="btn ghost" data-job="video.publish">Publish (YouTube/TikTok)</button>
+              </div>
+              <div class="footerNote">Recommended backend endpoint: <b>POST /api/admin/jobs</b> with <b>{ job, scope }</b>.</div>
+            </div>
+
+            <div class="box">
+              <div style="font-weight:850; font-size:12px; margin-bottom:10px;">Video Type Selector</div>
+              <div class="grid2">
+                <div>
+                  <label for="videoType">Select Video Type</label>
+                  <select class="select" id="videoType">
+                    <option value="funny">Funny</option>
+                    <option value="drama">Drama</option>
+                    <option value="thriller">Thriller</option>
+                    <option value="adventure">Adventure</option>
+                    <option value="educational">Educational</option>
+                    <option value="motivation">Motivation</option>
+                  </select>
+                  <div class="hint">Saved locally. Backend can read it via job payload.</div>
+                </div>
+                <div>
+                  <label for="videoLang">Default Language</label>
+                  <select class="select" id="videoLang">
+                    <option value="auto">Auto (viewer IP)</option>
+                    <option value="ar">Arabic</option>
+                    <option value="en">English</option>
+                    <option value="fr">French</option>
+                    <option value="de">German</option>
+                    <option value="es">Spanish</option>
+                    <option value="ru">Russian</option>
+                    <option value="sq">Albanian</option>
+                  </select>
+                  <div class="hint">Saved locally. Used in job payload if you trigger tasks here.</div>
+                </div>
+              </div>
+
+              <div class="btnRow">
+                <button class="btn purple" id="btnSaveVideoPrefs">Save Video Preferences</button>
+              </div>
+
+              <div class="footerNote">Recommended: <b>POST /api/admin/video/prefs</b> or include prefs in <b>POST /api/admin/jobs</b>.</div>
+            </div>
+          </div>
+
+          <div class="panel" id="panelP3">
+            <div class="box">
+              <div style="font-weight:850; font-size:12px; margin-bottom:10px;">Stock System Tasks (Stock only)</div>
+              <div class="taskRow">
+                <button class="btn green" data-job="stock.syncWatchlist">Sync Watchlist</button>
+                <button class="btn purple" data-job="stock.runSignals">Run AI Signals</button>
+                <button class="btn gold" data-job="stock.riskScan">Run Risk Scan</button>
+                <button class="btn ghost" data-job="stock.exportReport">Export Report</button>
+              </div>
+              <div class="footerNote">Recommended backend endpoint: <b>POST /api/admin/jobs</b> with <b>{ job, scope }</b>.</div>
+            </div>
+
+            <div class="box">
+              <div style="font-weight:850; font-size:12px; margin-bottom:10px;">Stock Snapshot</div>
+              <table class="table">
+                <thead><tr><th style="width:55%">Item</th><th>Value</th></tr></thead>
+                <tbody>
+                  <tr><td>Market Session</td><td id="stk1">—</td></tr>
+                  <tr><td>Signals (today)</td><td id="stk2">—</td></tr>
+                  <tr><td>Risk Level</td><td id="stk3">—</td></tr>
+                  <tr><td>Last Report</td><td id="stk4">—</td></tr>
+                </tbody>
+              </table>
+              <div class="footerNote">Endpoint expected: <b>GET /api/admin/status/stock</b></div>
+            </div>
+          </div>
 
         </div>
-      </section>
+      </div>
 
-      <!-- RIGHT: LOGS + SWITCHES -->
-      <aside class="card">
-        <div class="hd">
-          <h2>Control + Logs</h2>
-          <div class="row">
-            <button class="btn mini" id="btnLoadLogs">Load Logs</button>
-            <button class="btn mini" id="btnAutoLogs">Auto</button>
+      <!-- RIGHT: Controls + Logs -->
+      <div class="card">
+        <div class="cardHeader">
+          <div>
+            <h2>Control + Logs</h2>
+            <p class="sub">Maintenance, switches, job logs, and local controls</p>
+          </div>
+
+          <div class="rightTop">
+            <button class="btn ghost" id="btnLoadLogs">Load Logs</button>
+            <button class="btn ghost" id="btnAutoToggle">Auto: OFF</button>
           </div>
         </div>
 
-        <div class="bd">
+        <div class="section">
           <div class="box">
-            <p class="secTitle">Maintenance + Switch Control (UI Ready)</p>
-            <div class="kv">
+            <div style="font-weight:850; font-size:12px; margin-bottom:10px;">Maintenance + Switch Control (UI Ready)</div>
+
+            <div class="grid2">
               <div>
-                <label>Maintenance Mode</label>
-                <select id="selMaintenance">
+                <label for="maintenanceMode">Maintenance Mode</label>
+                <select class="select" id="maintenanceMode">
                   <option value="off">OFF</option>
                   <option value="on">ON</option>
-                  <option value="auto">AUTO (Backend decides)</option>
                 </select>
               </div>
               <div>
-                <label>Feature Switch Set</label>
-                <select id="selSwitchSet">
+                <label for="featureSet">Feature Switch Set</label>
+                <select class="select" id="featureSet">
                   <option value="builder">AI Builder</option>
                   <option value="video">AI Video Generator</option>
-                  <option value="status">AI Status / DevOps</option>
+                  <option value="stock">AI Stock System</option>
                 </select>
               </div>
             </div>
 
-            <div class="kv" style="margin-top:10px;">
+            <div class="grid2" style="margin-top:10px;">
               <div class="box" style="padding:10px;">
-                <div class="row" style="justify-content:space-between;">
-                  <span class="small">DeepSeek</span>
-                  <button class="btn mini" data-switch="deepseek" data-val="toggle">Toggle</button>
-                </div>
-                <div class="row" style="justify-content:space-between;margin-top:8px;">
-                  <span class="small">Stripe Logs</span>
-                  <button class="btn mini" data-switch="stripe_logs" data-val="toggle">Toggle</button>
-                </div>
-                <div class="row" style="justify-content:space-between;margin-top:8px;">
-                  <span class="small">Webhook Triggers</span>
-                  <button class="btn mini" data-switch="webhooks" data-val="toggle">Toggle</button>
+                <div class="muted" style="font-weight:800; font-size:12px; margin-bottom:8px;">Core Switches</div>
+                <div class="taskRow">
+                  <button class="btn ghost" data-switch="deepseek">DeepSeek</button>
+                  <button class="btn ghost" data-switch="stripeLogs">Stripe Logs</button>
+                  <button class="btn ghost" data-switch="webhookTriggers">Webhook Triggers</button>
                 </div>
               </div>
 
               <div class="box" style="padding:10px;">
-                <div class="row" style="justify-content:space-between;">
-                  <span class="small">Auto-Disable on Errors</span>
-                  <button class="btn mini" data-switch="auto_disable" data-val="toggle">Toggle</button>
-                </div>
-                <div class="row" style="justify-content:space-between;margin-top:8px;">
-                  <span class="small">Backups</span>
-                  <button class="btn mini" data-switch="backups" data-val="toggle">Toggle</button>
-                </div>
-                <div class="row" style="justify-content:space-between;margin-top:8px;">
-                  <span class="small">Notifications</span>
-                  <button class="btn mini" data-switch="notify" data-val="toggle">Toggle</button>
+                <div class="muted" style="font-weight:800; font-size:12px; margin-bottom:8px;">Safety / Ops</div>
+                <div class="taskRow">
+                  <button class="btn ghost" data-switch="autoDisableOnErrors">Auto-Disable on Errors</button>
+                  <button class="btn ghost" data-switch="backups">Backups</button>
+                  <button class="btn ghost" data-switch="notifications">Notifications</button>
                 </div>
               </div>
             </div>
 
-            <div class="row" style="margin-top:10px;">
-              <button class="btn mini warn" id="btnApplyMaintenance">Apply Maintenance</button>
-              <button class="btn mini primary" id="btnFetchSwitches">Fetch Switches</button>
+            <div class="btnRow" style="margin-top:10px;">
+              <button class="btn gold" id="btnApplyMaintenance">Apply Maintenance</button>
+              <button class="btn purple" id="btnFetchSwitches">Fetch Switches</button>
             </div>
 
-            <div class="hint" style="margin-top:10px;">
-              Backend endpoints expected (recommended):
-              <div class="mono">GET /api/admin/switches?set=builder|video|status
-POST /api/admin/switches { set, key, action }
-POST /api/admin/maintenance { mode }</div>
+            <div class="footerNote">
+              Backend endpoints expected (recommended):<br>
+              <b>GET /api/admin/switches?set=builder|video|stock</b><br>
+              <b>POST /api/admin/switches</b> with <b>{ set, key, action }</b><br>
+              <b>POST /api/admin/maintenance</b> with <b>{ mode }</b>
             </div>
           </div>
 
-          <div class="hr"></div>
-
           <div class="box">
-            <p class="secTitle">Logs</p>
-            <label>Log Filter</label>
-            <select id="selLogScope">
-              <option value="all">All</option>
-              <option value="builder">AI Builder</option>
-              <option value="video">AI Video Generator</option>
-              <option value="status">AI Status / DevOps</option>
-            </select>
-
-            <label style="margin-top:10px;">Output</label>
-            <textarea id="logOut" readonly placeholder="Logs will appear here..."></textarea>
-
-            <div class="row" style="margin-top:10px;">
-              <button class="btn mini" id="btnClearLogs">Clear</button>
-              <button class="btn mini" id="btnCopyLogs">Copy</button>
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+              <div style="font-weight:850; font-size:12px;">Logs</div>
+              <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                <label style="margin:0; font-size:12px; font-weight:800; color:var(--muted);">Log Filter</label>
+                <select class="select" id="logFilter" style="width:200px;">
+                  <option value="all">All</option>
+                  <option value="jobs">Jobs</option>
+                  <option value="switches">Switches</option>
+                  <option value="health">Health</option>
+                  <option value="errors">Errors</option>
+                </select>
+              </div>
             </div>
 
-            <div class="hint" style="margin-top:10px;">
-              Backend endpoint expected:
-              <div class="mono">GET /api/admin/logs?scope=all|builder|video|status</div>
+            <div class="logBox" id="logOutput">Logs will appear here…</div>
+
+            <div class="btnRow">
+              <button class="btn ghost" id="btnClearLogs">Clear</button>
+              <button class="btn ghost" id="btnCopyLogs">Copy</button>
             </div>
+
+            <div class="footerNote">Endpoint expected: <b>GET /api/admin/logs?filter=all|jobs|switches|health|errors</b></div>
           </div>
 
         </div>
-      </aside>
+      </div>
     </div>
   </div>
 
-  <div class="toast" id="toast">
-    <p class="t" id="toastT">—</p>
-    <p class="m" id="toastM">—</p>
-  </div>
-
   <script>
-    // =========================
-    // BossMind Automation Center
-    // =========================
-
+    // ===== Local storage keys =====
     const LS = {
-      baseUrl: "bossmind_base_url",
+      apiBase: "bossmind_api_base",
       adminKey: "bossmind_admin_key",
       activeTab: "bossmind_active_tab",
-      autoLogs: "bossmind_auto_logs"
+      autoMode: "bossmind_auto_mode",
+      videoType: "bossmind_video_type",
+      videoLang: "bossmind_video_lang"
     };
 
-    const state = {
-      activeTab: "builder",
-      autoLogs: false,
-      autoLogsTimer: null
-    };
+    const el = (id) => document.getElementById(id);
 
-    const $ = (id) => document.getElementById(id);
-    const panelTitle = $("panelTitle");
-    const projectPanel = $("projectPanel");
-    const dotBackend = $("dotBackend");
-    const lblBackend = $("lblBackend");
-    const lblLast = $("lblLast");
-    const baseUrlInput = $("baseUrl");
-    const adminKeyInput = $("adminKey");
-    const logOut = $("logOut");
-
-    function toast(title, msg){
-      const box = $("toast");
-      $("toastT").textContent = title;
-      $("toastM").textContent = msg;
-      box.classList.add("show");
-      setTimeout(()=>box.classList.remove("show"), 3200);
+    const logOutput = el("logOutput");
+    function log(line){
+      const ts = new Date().toISOString().replace("T"," ").replace("Z","");
+      logOutput.textContent += `\n[${ts}] ${line}`;
+      logOutput.scrollTop = logOutput.scrollHeight;
     }
 
-    function nowTime(){
-      const d = new Date();
-      return d.toLocaleString();
+    function setBackendUI(isUp){
+      const dot = el("backendDot");
+      const text = el("backendText");
+      dot.style.background = isUp ? "var(--ok)" : "var(--bad)";
+      dot.style.boxShadow = isUp ? "0 0 0 3px rgba(30,227,165,.12)" : "0 0 0 3px rgba(255,77,109,.12)";
+      text.textContent = isUp ? "Backend: up" : "Backend: down";
     }
 
-    function setBackendBadge(ok, text){
-      dotBackend.classList.remove("good","warn","bad");
-      if(ok === true) dotBackend.classList.add("good");
-      else if(ok === false) dotBackend.classList.add("bad");
-      else dotBackend.classList.add("warn");
-      lblBackend.textContent = "Backend: " + (text || "unknown");
+    function getApiBase(){
+      return (localStorage.getItem(LS.apiBase) || "").trim();
+    }
+    function getAdminKey(){
+      return (localStorage.getItem(LS.adminKey) || "").trim();
     }
 
-    function loadConn(){
-      baseUrlInput.value = localStorage.getItem(LS.baseUrl) || "";
-      adminKeyInput.value = localStorage.getItem(LS.adminKey) || "";
-      state.activeTab = localStorage.getItem(LS.activeTab) || "builder";
-      state.autoLogs = (localStorage.getItem(LS.autoLogs) || "false") === "true";
-      updateAutoBtn();
+    function headers(){
+      const h = { "Content-Type":"application/json" };
+      const key = getAdminKey();
+      if(key) h["x-admin-key"] = key;
+      return h;
     }
 
-    function saveConn(){
-      localStorage.setItem(LS.baseUrl, (baseUrlInput.value || "").trim());
-      localStorage.setItem(LS.adminKey, (adminKeyInput.value || "").trim());
-      toast("Saved", "Connection settings saved.");
-    }
-
-    function getBaseUrl(){
-      return (baseUrlInput.value || "").trim().replace(/\/+$/,"");
-    }
-
-    function getHeaders(){
-      const headers = { "Content-Type": "application/json" };
-      const k = (adminKeyInput.value || "").trim();
-      if(k) headers["x-admin-key"] = k;
-      return headers;
-    }
-
-    async function apiGet(path){
-      const base = getBaseUrl();
-      if(!base) throw new Error("Missing API Base URL");
-      const res = await fetch(base + path, { method:"GET", headers: getHeaders() });
-      const ct = res.headers.get("content-type") || "";
-      let data = null;
-      if(ct.includes("application/json")) data = await res.json();
-      else data = await res.text();
-      if(!res.ok) throw new Error(typeof data === "string" ? data : (data?.error || "Request failed"));
-      return data;
-    }
-
-    async function apiPost(path, payload){
-      const base = getBaseUrl();
-      if(!base) throw new Error("Missing API Base URL");
-      const res = await fetch(base + path, { method:"POST", headers: getHeaders(), body: JSON.stringify(payload || {}) });
-      const ct = res.headers.get("content-type") || "";
-      let data = null;
-      if(ct.includes("application/json")) data = await res.json();
-      else data = await res.text();
-      if(!res.ok) throw new Error(typeof data === "string" ? data : (data?.error || "Request failed"));
-      return data;
-    }
-
-    // -------------------------
-    // Project panels
-    // -------------------------
-    function renderBuilder(){
-      panelTitle.textContent = "Project 1 — AI Builder";
-      projectPanel.innerHTML = `
-        <div class="box">
-          <p class="secTitle">Core Tasks</p>
-          <div class="row">
-            <button class="btn good" data-job="builder_preview">Generate Preview</button>
-            <button class="btn primary" data-job="builder_export">Export Layout</button>
-            <button class="btn warn" data-job="builder_sync_supabase">Sync Supabase</button>
-            <button class="btn" data-job="builder_theme_rotate">Rotate Theme</button>
-          </div>
-          <div class="hint" style="margin-top:10px;">
-            Recommended endpoint:
-            <div class="mono">POST /api/admin/jobs { job, scope }</div>
-          </div>
-        </div>
-
-        <div class="hr"></div>
-
-        <div class="box">
-          <p class="secTitle">Status Snapshot</p>
-          <table class="table">
-            <thead><tr><th>Item</th><th class="right">Value</th></tr></thead>
-            <tbody id="tblBuilder">
-              <tr><td>Last Export</td><td class="right">—</td></tr>
-              <tr><td>Supabase Sync</td><td class="right">—</td></tr>
-              <tr><td>Active Theme</td><td class="right">—</td></tr>
-              <tr><td>Errors (24h)</td><td class="right">—</td></tr>
-            </tbody>
-          </table>
-          <div class="row" style="margin-top:10px;">
-            <button class="btn mini" id="btnBuilderStatus">Refresh Builder Status</button>
-          </div>
-          <div class="hint" style="margin-top:10px;">
-            Endpoint expected:
-            <div class="mono">GET /api/admin/status/builder</div>
-          </div>
-        </div>
-      `;
-
-      $("btnBuilderStatus").addEventListener("click", async ()=>{
-        try{
-          const data = await apiGet("/api/admin/status/builder");
-          fillTable("tblBuilder", [
-            ["Last Export", data?.lastExport || "—"],
-            ["Supabase Sync", data?.supabaseSync || "—"],
-            ["Active Theme", data?.activeTheme || "—"],
-            ["Errors (24h)", String(data?.errors24h ?? "—")]
-          ]);
-          toast("Builder", "Status refreshed.");
-        }catch(e){
-          toast("Builder Error", e.message);
-        }
-      });
-    }
-
-    function renderVideo(){
-      panelTitle.textContent = "Project 2 — AI Video Generator";
-      projectPanel.innerHTML = `
-        <div class="box">
-          <p class="secTitle">Google Sheet → Queue</p>
-          <div class="split">
-            <div>
-              <label>Sheet ID</label>
-              <input id="sheetId" placeholder="e.g. 14U3v1F597jKojJm0jZ1iK2Bbo2mJeYWXH7e5M16lvRU" />
-            </div>
-            <div>
-              <label>Tab / Worksheet Name</label>
-              <input id="sheetTab" placeholder="e.g. AI Cinematic Script Automation" />
-            </div>
-          </div>
-          <div class="row" style="margin-top:10px;">
-            <button class="btn primary" id="btnAttachSheet">Attach Sheet</button>
-            <button class="btn warn" id="btnSyncQueue">Sync Queue Now</button>
-          </div>
-          <div class="hint" style="margin-top:10px;">
-            Endpoints expected:
-            <div class="mono">POST /api/admin/queue/sheet { sheetId, tab }
-POST /api/admin/queue/sync</div>
-          </div>
-        </div>
-
-        <div class="hr"></div>
-
-        <div class="box">
-          <p class="secTitle">Video Type</p>
-          <div class="split">
-            <div>
-              <label>Category</label>
-              <select id="videoType">
-                <option value="Entertainment">Entertainment</option>
-                <option value="Funny">Funny</option>
-                <option value="Drama">Drama</option>
-                <option value="Thriller">Thriller</option>
-                <option value="Adventure">Adventure</option>
-                <option value="Action">Action</option>
-                <option value="Kids">Kids</option>
-                <option value="Motivational">Motivational</option>
-                <option value="Horror">Horror</option>
-              </select>
-            </div>
-            <div>
-              <label>Mode</label>
-              <select id="videoMode">
-                <option value="short">YouTube Short</option>
-                <option value="full">Full Video</option>
-              </select>
-            </div>
-          </div>
-          <div class="row" style="margin-top:10px;">
-            <button class="btn primary" id="btnSetVideoType">Save Selection</button>
-          </div>
-          <div class="hint" style="margin-top:10px;">
-            Endpoint expected:
-            <div class="mono">POST /api/admin/video/type { type, mode }</div>
-          </div>
-        </div>
-
-        <div class="hr"></div>
-
-        <div class="box">
-          <p class="secTitle">Run Pipeline Jobs</p>
-          <div class="row">
-            <button class="btn good" data-job="video_review_script">Review Script</button>
-            <button class="btn primary" data-job="video_generate_scenes">Generate Scenes</button>
-            <button class="btn warn" data-job="video_render">Render Video</button>
-            <button class="btn" data-job="video_upload">Upload</button>
-            <button class="btn good" data-job="video_publish">Publish</button>
-          </div>
-          <div class="hint" style="margin-top:10px;">
-            Endpoint expected:
-            <div class="mono">POST /api/admin/jobs { job, scope }</div>
-          </div>
-        </div>
-
-        <div class="hr"></div>
-
-        <div class="box">
-          <p class="secTitle">Queue Snapshot</p>
-          <table class="table">
-            <thead><tr><th>Item</th><th class="right">Value</th></tr></thead>
-            <tbody id="tblVideo">
-              <tr><td>Queue Length</td><td class="right">—</td></tr>
-              <tr><td>Next Item</td><td class="right">—</td></tr>
-              <tr><td>Last Publish</td><td class="right">—</td></tr>
-              <tr><td>Errors (24h)</td><td class="right">—</td></tr>
-            </tbody>
-          </table>
-          <div class="row" style="margin-top:10px;">
-            <button class="btn mini" id="btnVideoStatus">Refresh Video Status</button>
-          </div>
-          <div class="hint" style="margin-top:10px;">
-            Endpoint expected:
-            <div class="mono">GET /api/admin/status/video</div>
-          </div>
-        </div>
-      `;
-
-      $("btnAttachSheet").addEventListener("click", async ()=>{
-        try{
-          const sheetId = ($("sheetId").value || "").trim();
-          const tab = ($("sheetTab").value || "").trim();
-          if(!sheetId) throw new Error("Sheet ID is required");
-          const out = await apiPost("/api/admin/queue/sheet", { sheetId, tab });
-          toast("Sheet Attached", (out?.message || "Sheet linked to queue."));
-        }catch(e){
-          toast("Sheet Error", e.message);
-        }
-      });
-
-      $("btnSyncQueue").addEventListener("click", async ()=>{
-        try{
-          const out = await apiPost("/api/admin/queue/sync", {});
-          toast("Queue Sync", (out?.message || "Queue sync triggered."));
-        }catch(e){
-          toast("Queue Error", e.message);
-        }
-      });
-
-      $("btnSetVideoType").addEventListener("click", async ()=>{
-        try{
-          const type = $("videoType").value;
-          const mode = $("videoMode").value;
-          const out = await apiPost("/api/admin/video/type", { type, mode });
-          toast("Video Type Saved", (out?.message || `${type} • ${mode}`));
-        }catch(e){
-          toast("Video Type Error", e.message);
-        }
-      });
-
-      $("btnVideoStatus").addEventListener("click", async ()=>{
-        try{
-          const data = await apiGet("/api/admin/status/video");
-          fillTable("tblVideo", [
-            ["Queue Length", String(data?.queueLength ?? "—")],
-            ["Next Item", data?.nextItem || "—"],
-            ["Last Publish", data?.lastPublish || "—"],
-            ["Errors (24h)", String(data?.errors24h ?? "—")]
-          ]);
-          toast("Video", "Status refreshed.");
-        }catch(e){
-          toast("Video Error", e.message);
-        }
-      });
-    }
-
-    function renderStatus(){
-      panelTitle.textContent = "Project 3 — AI Stock System";
-      projectPanel.innerHTML = `
-        <div class="box">
-          <p class="secTitle">System Health + Guardian</p>
-          <div class="row">
-            <button class="btn good" data-job="status_health_full">Full Health Scan</button>
-            <button class="btn warn" data-job="status_incident_report">Incident Report</button>
-            <button class="btn primary" data-job="status_self_heal">Self-Heal Attempt</button>
-          </div>
-          <div class="hint" style="margin-top:10px;">
-            Endpoint expected:
-            <div class="mono">POST /api/admin/jobs { job, scope }</div>
-          </div>
-        </div>
-
-        <div class="hr"></div>
-
-        <div class="box">
-          <p class="secTitle">Backup + Sync</p>
-          <div class="row">
-            <button class="btn primary" data-job="backup_all_now">Backup All Systems Now</button>
-            <button class="btn" data-job="backup_supabase">Backup Supabase</button>
-            <button class="btn" data-job="backup_github">Backup GitHub</button>
-          </div>
-          <div class="hint" style="margin-top:10px;">
-            Endpoint expected:
-            <div class="mono">POST /api/admin/jobs { job, scope }</div>
-          </div>
-        </div>
-
-        <div class="hr"></div>
-
-        <div class="box">
-          <p class="secTitle">Status Snapshot</p>
-          <table class="table">
-            <thead><tr><th>Item</th><th class="right">Value</th></tr></thead>
-            <tbody id="tblStatus">
-              <tr><td>Health</td><td class="right">—</td></tr>
-              <tr><td>Guardian</td><td class="right">—</td></tr>
-              <tr><td>Last Backup</td><td class="right">—</td></tr>
-              <tr><td>Open Incidents</td><td class="right">—</td></tr>
-            </tbody>
-          </table>
-          <div class="row" style="margin-top:10px;">
-            <button class="btn mini" id="btnStatusRefresh">Refresh Status</button>
-          </div>
-          <div class="hint" style="margin-top:10px;">
-            Endpoint expected:
-            <div class="mono">GET /api/admin/status/system</div>
-          </div>
-        </div>
-      `;
-
-      $("btnStatusRefresh").addEventListener("click", async ()=>{
-        try{
-          const data = await apiGet("/api/admin/status/system");
-          fillTable("tblStatus", [
-            ["Health", data?.health || "—"],
-            ["Guardian", data?.guardian || "—"],
-            ["Last Backup", data?.lastBackup || "—"],
-            ["Open Incidents", String(data?.openIncidents ?? "—")]
-          ]);
-          toast("Status", "System snapshot refreshed.");
-        }catch(e){
-          toast("Status Error", e.message);
-        }
-      });
-    }
-
-    function fillTable(tbodyId, rows){
-      const el = document.getElementById(tbodyId);
-      if(!el) return;
-      el.innerHTML = rows.map(([k,v]) => `<tr><td>${escapeHtml(k)}</td><td class="right">${escapeHtml(String(v))}</td></tr>`).join("");
-    }
-
-    function escapeHtml(str){
-      return String(str)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
-    }
-
-    // -------------------------
-    // Tabs + Rendering
-    // -------------------------
-    function setTab(tab){
-      state.activeTab = tab;
-      localStorage.setItem(LS.activeTab, tab);
-      document.querySelectorAll(".tab").forEach(b=>{
-        b.classList.toggle("active", b.dataset.tab === tab);
-      });
-
-      if(tab === "builder") renderBuilder();
-      if(tab === "video") renderVideo();
-      if(tab === "status") renderStatus();
-
-      wireJobButtons();
-      lblLast.textContent = nowTime();
-    }
-
-    function wireJobButtons(){
-      document.querySelectorAll("[data-job]").forEach(btn=>{
-        btn.addEventListener("click", async ()=>{
-          const job = btn.getAttribute("data-job");
-          const original = btn.textContent;
-          try{
-            btn.disabled = true;
-            btn.textContent = "Running…";
-            const out = await apiPost("/api/admin/jobs", { job, scope: state.activeTab });
-            toast("Job Triggered", out?.message || job);
-            await loadLogs();
-          }catch(e){
-            toast("Job Error", e.message);
-          }finally{
-            btn.disabled = false;
-            btn.textContent = original;
-            lblLast.textContent = nowTime();
-          }
-        });
-      });
-    }
-
-    // -------------------------
-    // Health, Logs, Switches
-    // -------------------------
-    async function ping(){
+    async function safeFetch(url, opts={}){
       try{
-        const data = await apiGet("/health");
-        setBackendBadge(true, "ok");
-        toast("Ping OK", typeof data === "string" ? data : "Health endpoint responded.");
-      }catch(e){
-        setBackendBadge(false, "down");
-        toast("Ping Failed", e.message);
-      }finally{
-        lblLast.textContent = nowTime();
+        const res = await fetch(url, opts);
+        const text = await res.text();
+        let json = null;
+        try{ json = JSON.parse(text); }catch(_){}
+        return { ok: res.ok, status: res.status, text, json };
+      }catch(err){
+        return { ok:false, status:0, text:String(err), json:null };
       }
     }
 
-    async function runHealth(){
-      try{
-        let data;
-        try{
-          data = await apiGet("/api/admin/health");
-        }catch(_){
-          data = await apiGet("/health");
-        }
-        setBackendBadge(true, "ok");
-        toast("Health Check", "Completed.");
-        logOut.value = (typeof data === "string") ? data : JSON.stringify(data, null, 2);
-      }catch(e){
-        setBackendBadge(false, "down");
-        toast("Health Error", e.message);
-      }finally{
-        lblLast.textContent = nowTime();
-      }
+    // ===== Tabs =====
+    const tabs = [
+      { id:"tabP1", panel:"panelP1", title:"Project 1 — AI Builder", sub:"Core tasks, status snapshot, and connection" },
+      { id:"tabP2", panel:"panelP2", title:"Project 2 — AI Video Generator", sub:"Queue, scenario review, render, publish, and preferences" },
+      { id:"tabP3", panel:"panelP3", title:"Project 3 — AI Stock System", sub:"Signals, risk, watchlist sync, and reporting" },
+    ];
+
+    function activateTab(tabKey){
+      tabs.forEach(t=>{
+        el(t.id).classList.toggle("active", t.id === tabKey);
+        el(t.panel).classList.toggle("active", t.id === tabKey);
+      });
+      const t = tabs.find(x=>x.id===tabKey) || tabs[0];
+      el("panelTitle").textContent = t.title;
+      el("panelSub").textContent = t.sub;
+      localStorage.setItem(LS.activeTab, tabKey);
+      log(`Switched to ${t.title}`);
     }
 
-    async function loadLogs(){
-      try{
-        const scope = $("selLogScope").value;
-        const data = await apiGet(`/api/admin/logs?scope=${encodeURIComponent(scope)}`);
-        logOut.value = (typeof data === "string") ? data : JSON.stringify(data, null, 2);
-        lblLast.textContent = nowTime();
-      }catch(e){
-        toast("Logs Error", e.message);
-      }
-    }
-
-    function updateAutoBtn(){
-      $("btnAutoLogs").textContent = state.autoLogs ? "Auto: ON" : "Auto: OFF";
-      $("btnAutoLogs").classList.toggle("good", state.autoLogs);
-    }
-
-    function toggleAutoLogs(){
-      state.autoLogs = !state.autoLogs;
-      localStorage.setItem(LS.autoLogs, String(state.autoLogs));
-      updateAutoBtn();
-
-      if(state.autoLogs){
-        if(state.autoLogsTimer) clearInterval(state.autoLogsTimer);
-        state.autoLogsTimer = setInterval(loadLogs, 5000);
-        toast("Logs", "Auto refresh enabled (5s).");
-      }else{
-        if(state.autoLogsTimer) clearInterval(state.autoLogsTimer);
-        state.autoLogsTimer = null;
-        toast("Logs", "Auto refresh disabled.");
-      }
-    }
-
-    async function applyMaintenance(){
-      try{
-        const mode = $("selMaintenance").value;
-        const out = await apiPost("/api/admin/maintenance", { mode });
-        toast("Maintenance", out?.message || ("Applied: " + mode));
-      }catch(e){
-        toast("Maintenance Error", e.message);
-      }
-    }
-
-    async function fetchSwitches(){
-      try{
-        const set = $("selSwitchSet").value;
-        const out = await apiGet(`/api/admin/switches?set=${encodeURIComponent(set)}`);
-        toast("Switches", out?.message || "Fetched (see logs output).");
-        logOut.value = (typeof out === "string") ? out : JSON.stringify(out, null, 2);
-      }catch(e){
-        toast("Switch Error", e.message);
-      }
-    }
-
-    async function toggleSwitch(key){
-      try{
-        const set = $("selSwitchSet").value;
-        const out = await apiPost("/api/admin/switches", { set, key, action: "toggle" });
-        toast("Switch Updated", out?.message || (key + " toggled"));
-        await fetchSwitches();
-      }catch(e){
-        toast("Switch Error", e.message);
-      }
-    }
-
-    async function syncAll(){
-      try{
-        const out = await apiPost("/api/admin/sync", { scope: "all" });
-        toast("Sync Triggered", out?.message || "Sync started.");
-        await loadLogs();
-      }catch(e){
-        toast("Sync Error", e.message);
-      }
-    }
-
-    // -------------------------
-    // Global wiring
-    // -------------------------
     document.querySelectorAll(".tab").forEach(btn=>{
-      btn.addEventListener("click", ()=> setTab(btn.dataset.tab));
+      btn.addEventListener("click", ()=> activateTab(btn.id));
     });
 
-    $("btnSaveConn").addEventListener("click", saveConn);
-    $("btnPing").addEventListener("click", ping);
-    $("btnRefreshAll").addEventListener("click", async ()=>{
-      await runHealth();
-      await loadLogs();
-      toast("Refreshed", "Health + logs refreshed.");
+    // ===== Connection Save / Ping =====
+    function refreshConnUI(){
+      const base = getApiBase();
+      el("apiBase").value = base;
+      el("adminKey").value = getAdminKey();
+      el("chipApi").textContent = base ? `API: set` : `API: not set`;
+      el("chipApi").parentElement.classList.toggle("ok", !!base);
+      el("chipApi").parentElement.classList.toggle("bad", !base);
+    }
+
+    el("btnSaveConn").addEventListener("click", ()=>{
+      const base = el("apiBase").value.trim();
+      const key  = el("adminKey").value.trim();
+      localStorage.setItem(LS.apiBase, base);
+      localStorage.setItem(LS.adminKey, key);
+      refreshConnUI();
+      log("Connection saved.");
     });
-    $("btnRunHealth").addEventListener("click", runHealth);
-    $("btnLoadLogs").addEventListener("click", loadLogs);
-    $("btnAutoLogs").addEventListener("click", toggleAutoLogs);
-    $("btnClearLogs").addEventListener("click", ()=> logOut.value = "");
-    $("btnCopyLogs").addEventListener("click", async ()=>{
-      try{
-        await navigator.clipboard.writeText(logOut.value || "");
-        toast("Copied", "Logs copied to clipboard.");
-      }catch(e){
-        toast("Copy Error", "Clipboard not available.");
+
+    el("btnPing").addEventListener("click", async ()=>{
+      const base = getApiBase();
+      if(!base){ log("Ping blocked: API Base URL not set."); setBackendUI(false); return; }
+      log(`Ping → ${base}/health`);
+      const r = await safeFetch(`${base.replace(/\/$/,"")}/health`, { method:"GET", headers: headers() });
+      if(r.ok){
+        setBackendUI(true);
+        log("Ping OK.");
+      }else{
+        setBackendUI(false);
+        log(`Ping failed (${r.status}): ${r.text.slice(0,200)}`);
       }
     });
 
-    $("btnApplyMaintenance").addEventListener("click", applyMaintenance);
-    $("btnFetchSwitches").addEventListener("click", fetchSwitches);
+    // ===== Global buttons =====
+    el("btnRefreshAll").addEventListener("click", ()=>{
+      log("Refresh All (UI) triggered.");
+    });
 
+    el("btnHealth").addEventListener("click", async ()=>{
+      const base = getApiBase();
+      if(!base){ log("Health blocked: API Base URL not set."); setBackendUI(false); return; }
+      log("Run Health Check…");
+      const r = await safeFetch(`${base.replace(/\/$/,"")}/health`, { method:"GET", headers: headers() });
+      if(r.ok){ setBackendUI(true); log("Health: OK"); }
+      else { setBackendUI(false); log(`Health: FAIL (${r.status})`); }
+    });
+
+    el("btnSyncAll").addEventListener("click", ()=>{
+      log("Sync (Sheet / DB / Config) requested (UI).");
+    });
+
+    // ===== Jobs trigger =====
+    async function triggerJob(job){
+      const base = getApiBase();
+      if(!base){ log("Job blocked: API Base URL not set."); setBackendUI(false); return; }
+
+      const activeTab = localStorage.getItem(LS.activeTab) || "tabP1";
+      const scope =
+        activeTab === "tabP1" ? "builder" :
+        activeTab === "tabP2" ? "video"   :
+        "stock";
+
+      const payload = {
+        job,
+        scope,
+        prefs: {
+          videoType: localStorage.getItem(LS.videoType) || "funny",
+          videoLang: localStorage.getItem(LS.videoLang) || "auto"
+        }
+      };
+
+      log(`Job → ${job} (scope=${scope})`);
+      const r = await safeFetch(`${base.replace(/\/$/,"")}/api/admin/jobs`, {
+        method:"POST",
+        headers: headers(),
+        body: JSON.stringify(payload)
+      });
+
+      if(r.ok){
+        setBackendUI(true);
+        log(`Job accepted: ${job}`);
+      }else{
+        setBackendUI(false);
+        log(`Job failed (${r.status}): ${r.text.slice(0,240)}`);
+      }
+    }
+
+    document.querySelectorAll("[data-job]").forEach(btn=>{
+      btn.addEventListener("click", ()=> triggerJob(btn.getAttribute("data-job")));
+    });
+
+    // ===== Builder status =====
+    el("btnRefreshStatus").addEventListener("click", async ()=>{
+      const base = getApiBase();
+      if(!base){ log("Status blocked: API Base URL not set."); setBackendUI(false); return; }
+      log("Fetch builder status…");
+      const r = await safeFetch(`${base.replace(/\/$/,"")}/api/admin/status/builder`, { method:"GET", headers: headers() });
+      if(r.ok && r.json){
+        setBackendUI(true);
+        el("s1").textContent = r.json.lastExport ?? "—";
+        el("s2").textContent = r.json.supabaseSync ?? "—";
+        el("s3").textContent = r.json.activeTheme ?? "—";
+        el("s4").textContent = r.json.errors24h ?? "—";
+        log("Builder status updated.");
+      }else{
+        setBackendUI(false);
+        log(`Builder status failed (${r.status}): ${r.text.slice(0,240)}`);
+      }
+    });
+
+    // ===== Stock status =====
+    async function refreshStockStatus(){
+      const base = getApiBase();
+      if(!base){ return; }
+      const r = await safeFetch(`${base.replace(/\/$/,"")}/api/admin/status/stock`, { method:"GET", headers: headers() });
+      if(r.ok && r.json){
+        setBackendUI(true);
+        el("stk1").textContent = r.json.marketSession ?? "—";
+        el("stk2").textContent = r.json.signalsToday ?? "—";
+        el("stk3").textContent = r.json.riskLevel ?? "—";
+        el("stk4").textContent = r.json.lastReport ?? "—";
+        log("Stock status updated.");
+      }
+    }
+
+    // ===== Video prefs =====
+    function loadVideoPrefs(){
+      const vt = localStorage.getItem(LS.videoType) || "funny";
+      const vl = localStorage.getItem(LS.videoLang) || "auto";
+      el("videoType").value = vt;
+      el("videoLang").value = vl;
+    }
+    el("btnSaveVideoPrefs").addEventListener("click", ()=>{
+      localStorage.setItem(LS.videoType, el("videoType").value);
+      localStorage.setItem(LS.videoLang, el("videoLang").value);
+      log("Video preferences saved.");
+    });
+
+    // ===== Switches / maintenance (UI) =====
+    function toggleButtonState(btn, on){
+      btn.classList.toggle("green", on);
+      btn.classList.toggle("ghost", !on);
+      btn.textContent = btn.textContent.replace("ON","").replace("OFF","").trim() + (on ? " (ON)" : " (OFF)");
+    }
+
+    // Local-only visual toggle (safe)
+    const localSwitchState = {};
     document.querySelectorAll("[data-switch]").forEach(btn=>{
       btn.addEventListener("click", ()=>{
         const key = btn.getAttribute("data-switch");
-        toggleSwitch(key);
+        localSwitchState[key] = !localSwitchState[key];
+        // reset label safely
+        btn.textContent = btn.textContent.replace(/\s+\(ON\)|\s+\(OFF\)/g,"");
+        btn.classList.remove("green","ghost");
+        btn.classList.add(localSwitchState[key] ? "green" : "ghost");
+        btn.textContent += localSwitchState[key] ? " (ON)" : " (OFF)";
+        log(`Local switch toggled: ${key} = ${localSwitchState[key] ? "ON" : "OFF"}`);
       });
     });
 
-    $("btnSyncAll").addEventListener("click", syncAll);
+    el("btnApplyMaintenance").addEventListener("click", async ()=>{
+      const base = getApiBase();
+      if(!base){ log("Maintenance blocked: API Base URL not set."); setBackendUI(false); return; }
+      const mode = el("maintenanceMode").value;
+      log(`Apply maintenance: ${mode.toUpperCase()}`);
+      const r = await safeFetch(`${base.replace(/\/$/,"")}/api/admin/maintenance`, {
+        method:"POST", headers: headers(), body: JSON.stringify({ mode })
+      });
+      if(r.ok){ setBackendUI(true); log("Maintenance applied."); }
+      else { setBackendUI(false); log(`Maintenance failed (${r.status}): ${r.text.slice(0,240)}`); }
+    });
 
-    // init
-    loadConn();
-    setTab(state.activeTab);
-    lblLast.textContent = nowTime();
-    setBackendBadge(null, "unknown");
-    setTimeout(ping, 250);
+    el("btnFetchSwitches").addEventListener("click", async ()=>{
+      const base = getApiBase();
+      if(!base){ log("Fetch switches blocked: API Base URL not set."); setBackendUI(false); return; }
+      const set = el("featureSet").value;
+      log(`Fetch switches: set=${set}`);
+      const r = await safeFetch(`${base.replace(/\/$/,"")}/api/admin/switches?set=${encodeURIComponent(set)}`, {
+        method:"GET", headers: headers()
+      });
+      if(r.ok){ setBackendUI(true); log("Switches fetched (check backend response)."); }
+      else { setBackendUI(false); log(`Fetch switches failed (${r.status}): ${r.text.slice(0,240)}`); }
+    });
+
+    // ===== Logs =====
+    el("btnLoadLogs").addEventListener("click", async ()=>{
+      const base = getApiBase();
+      if(!base){ log("Load logs blocked: API Base URL not set."); setBackendUI(false); return; }
+      const filter = el("logFilter").value || "all";
+      log(`Load logs: filter=${filter}`);
+      const r = await safeFetch(`${base.replace(/\/$/,"")}/api/admin/logs?filter=${encodeURIComponent(filter)}`, {
+        method:"GET", headers: headers()
+      });
+      if(r.ok){
+        setBackendUI(true);
+        log("Logs loaded.");
+        if(r.json){
+          logOutput.textContent = "Logs:\n" + JSON.stringify(r.json, null, 2);
+        }else{
+          logOutput.textContent = r.text || "No logs.";
+        }
+      }else{
+        setBackendUI(false);
+        log(`Load logs failed (${r.status}): ${r.text.slice(0,240)}`);
+      }
+    });
+
+    el("btnAutoToggle").addEventListener("click", ()=>{
+      const cur = (localStorage.getItem(LS.autoMode) || "off") === "on";
+      const next = !cur;
+      localStorage.setItem(LS.autoMode, next ? "on" : "off");
+      el("btnAutoToggle").textContent = `Auto: ${next ? "ON" : "OFF"}`;
+      log(`Auto mode set to ${next ? "ON" : "OFF"} (UI only).`);
+    });
+
+    el("btnClearLogs").addEventListener("click", ()=>{
+      logOutput.textContent = "Logs cleared.";
+    });
+
+    el("btnCopyLogs").addEventListener("click", async ()=>{
+      try{
+        await navigator.clipboard.writeText(logOutput.textContent || "");
+        log("Logs copied to clipboard.");
+      }catch(e){
+        log("Copy failed (browser permission).");
+      }
+    });
+
+    // ===== Clock =====
+    function tick(){
+      const d = new Date();
+      el("clockText").textContent = d.toLocaleString();
+    }
+    setInterval(tick, 1000);
+    tick();
+
+    // ===== Init =====
+    (function init(){
+      // clean default log box
+      logOutput.textContent = "Logs will appear here…";
+      refreshConnUI();
+      loadVideoPrefs();
+      el("btnAutoToggle").textContent = `Auto: ${(localStorage.getItem(LS.autoMode) || "off").toUpperCase()}`;
+      const saved = localStorage.getItem(LS.activeTab) || "tabP1";
+      activateTab(saved);
+      setBackendUI(false);
+
+      // attempt silent stock status refresh if base set
+      if(getApiBase()){ refreshStockStatus(); }
+      log("UI loaded.");
+    })();
   </script>
 </body>
 </html>
