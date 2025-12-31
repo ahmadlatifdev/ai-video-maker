@@ -1,1490 +1,854 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>BossMind Admin — Automation Center</title>
-
+  <title>BossMind Admin Dashboard</title>
   <style>
     :root{
-      --bg:#070a10;
-      --bg2:#0b1020;
-      --panel:#0f1623;
-      --panel2:#0c1220;
-      --card:#111b2b;
-      --card2:#0e1526;
-      --line:rgba(255,255,255,.09);
-      --line2:rgba(255,255,255,.06);
-      --text:#e7eaf1;
-      --muted:#a7b0c0;
-
-      --ok:#1ee3a5;
-      --warn:#f5c542;
-      --bad:#ff4d6d;
-
-      --p1:#7c3aed;   /* Builder */
-      --p2:#22c55e;   /* Video */
-      --p3:#f59e0b;   /* Stock */
-
-      --shadow: 0 20px 60px rgba(0,0,0,.50);
-      --shadow2: 0 10px 28px rgba(0,0,0,.35);
-      --r16: 16px;
-      --r22: 22px;
+      --bg:#070A12;
+      --panel:#0B1020;
+      --panel2:#0E1730;
+      --stroke:rgba(255,255,255,.08);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.62);
+      --muted2:rgba(255,255,255,.44);
+      --good:#22c55e;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+      --p1:#8b5cf6;
+      --p2:#22c55e;
+      --p3:#f59e0b;
+      --chip:rgba(255,255,255,.08);
+      --shadow:0 14px 48px rgba(0,0,0,.55);
+      --radius:18px;
+      --radius2:24px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
     }
 
-    /* ✅ No zoom / no transform scale */
-    * { box-sizing: border-box; }
-    html, body { height: 100%; }
+    *{box-sizing:border-box}
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      font-family:var(--font);
+      background: radial-gradient(1200px 800px at 25% -10%, rgba(139,92,246,.20), transparent 60%),
+                  radial-gradient(900px 700px at 95% 10%, rgba(34,197,94,.16), transparent 55%),
+                  radial-gradient(800px 650px at 55% 120%, rgba(245,158,11,.12), transparent 55%),
+                  var(--bg);
       color:var(--text);
-      background:
-        radial-gradient(1100px 600px at 12% 18%, rgba(124,58,237,.32), transparent 60%),
-        radial-gradient(900px 500px at 88% 20%, rgba(34,197,94,.16), transparent 55%),
-        radial-gradient(900px 700px at 85% 85%, rgba(245,158,11,.14), transparent 60%),
-        linear-gradient(180deg, #05070c, var(--bg));
-      overflow-x:hidden;
     }
 
     .app{
-      min-height:100%;
+      min-height:100vh;
       display:grid;
-      grid-template-columns: 290px 1fr;
-    }
-    @media (max-width: 1100px){
-      .app{ grid-template-columns: 1fr; }
+      grid-template-columns: 320px 1fr;
+      gap:18px;
+      padding:18px;
     }
 
-    /* Sidebar */
-    .side{
-      position: sticky;
-      top:0;
-      height:100vh;
-      padding:16px 14px;
-      border-right: 1px solid var(--line2);
-      background: rgba(10,14,22,.70);
-      backdrop-filter: blur(10px);
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid var(--stroke);
+      border-radius:var(--radius2);
+      box-shadow:var(--shadow);
     }
-    @media (max-width: 1100px){
-      .side{
-        position:relative;
-        height:auto;
-        border-right:none;
-        border-bottom:1px solid var(--line2);
-      }
+
+    .sidebar{
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      position:sticky;
+      top:18px;
+      height:calc(100vh - 36px);
+      overflow:auto;
     }
 
     .brand{
+      padding:14px 14px 10px;
+      border-radius:var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border:1px solid var(--stroke);
       display:flex;
       gap:12px;
       align-items:center;
-      padding: 10px 10px 14px;
-      border:1px solid var(--line2);
-      border-radius: var(--r22);
-      background: rgba(15,22,35,.60);
-      box-shadow: var(--shadow2);
     }
-    .logo{
-      width:42px; height:42px; border-radius: 14px;
-      background: linear-gradient(135deg, rgba(124,58,237,1), rgba(34,197,94,1));
-      box-shadow: 0 14px 34px rgba(124,58,237,.22);
-      flex:0 0 auto;
+    .brand .logo{
+      width:34px;height:34px;border-radius:12px;
+      background: radial-gradient(circle at 20% 20%, rgba(139,92,246,.95), rgba(34,197,94,.65) 60%, rgba(245,158,11,.45));
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      flex:none;
     }
-    .brand h1{
-      margin:0;
-      font-size: 14px;
-      font-weight: 850;
-      letter-spacing:.2px;
-      line-height:1.15;
-    }
-    .brand p{
-      margin:4px 0 0;
-      font-size: 11px;
-      color: var(--muted);
-      line-height:1.25;
+    .brand h1{ margin:0; font-size:15px; letter-spacing:.3px; font-weight:900; }
+    .brand p{ margin:4px 0 0; font-size:12px; color:var(--muted); }
+
+    .nav{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      padding:10px;
+      border-radius:var(--radius);
+      background: rgba(255,255,255,.02);
+      border:1px solid var(--stroke);
     }
 
-    .sideBlock{
-      margin-top: 14px;
-      border:1px solid var(--line2);
-      border-radius: var(--r22);
-      background: rgba(15,22,35,.52);
-      box-shadow: var(--shadow2);
-      overflow:hidden;
-    }
-    .sideHead{
-      padding: 12px 12px 10px;
-      border-bottom:1px solid var(--line2);
-      background: rgba(12,18,32,.28);
+    .navbtn{
+      width:100%;
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:10px;
+      gap:12px;
+      padding:12px 12px;
+      border-radius:16px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.03);
+      cursor:pointer;
+      color:var(--text);
+      transition:.18s transform, .18s background;
     }
-    .sideHead .t{
-      font-size: 12px;
-      font-weight: 850;
-      color: rgba(231,234,241,.96);
+    .navbtn:hover{ transform: translateY(-1px); background: rgba(255,255,255,.05); }
+    .navbtn.active{
+      background: rgba(139,92,246,.12);
+      border-color: rgba(139,92,246,.30);
+      box-shadow: 0 10px 30px rgba(139,92,246,.10);
     }
+    .navleft{ display:flex; flex-direction:column; gap:2px; align-items:flex-start; }
+    .navtitle{ font-weight:900; font-size:13px; }
+    .navsub{ font-size:12px; color:var(--muted); }
+
     .chip{
       display:inline-flex;
       align-items:center;
       gap:8px;
-      padding: 7px 10px;
-      border-radius: 999px;
-      border:1px solid rgba(255,255,255,.08);
-      background: rgba(17,27,43,.55);
-      font-size: 11px;
-      font-weight: 800;
-      color: rgba(231,234,241,.92);
+      padding:7px 10px;
+      border-radius:999px;
+      background: var(--chip);
+      border:1px solid var(--stroke);
+      font-size:12px;
+      color:var(--muted);
       white-space:nowrap;
     }
-    .dot{ width:8px;height:8px;border-radius:99px; background: var(--bad); }
+    .dot{ width:8px; height:8px; border-radius:50%; display:inline-block; background: var(--warn); }
+    .dot.good{ background: var(--good); }
+    .dot.bad{ background: var(--bad); }
 
-    .sideNav{
-      padding: 10px;
+    .badge{
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--stroke);
+      font-size:12px;
+      background: rgba(255,255,255,.02);
+      color: var(--muted);
+      white-space:nowrap;
+    }
+    .badge.p1{ border-color: rgba(139,92,246,.35); color: rgba(216,203,255,.95); background: rgba(139,92,246,.10); }
+    .badge.p2{ border-color: rgba(34,197,94,.35); color: rgba(186,255,214,.95); background: rgba(34,197,94,.10); }
+    .badge.p3{ border-color: rgba(245,158,11,.35); color: rgba(255,232,186,.95); background: rgba(245,158,11,.10); }
+
+    .main{
+      padding:16px;
       display:flex;
       flex-direction:column;
-      gap:8px;
-    }
-    .navBtn{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      padding: 10px 12px;
-      border-radius: 14px;
-      border:1px solid rgba(255,255,255,.08);
-      background: rgba(12,18,32,.34);
-      color: var(--text);
-      cursor:pointer;
-      font-weight: 850;
-      font-size: 12px;
-      transition: transform .12s ease, background .12s ease, border-color .12s ease;
-      user-select:none;
-    }
-    .navBtn:hover{ transform: translateY(-1px); background: rgba(18,27,42,.46); border-color: rgba(255,255,255,.14); }
-    .navBtn.active{
-      background: rgba(124,58,237,.18);
-      border-color: rgba(124,58,237,.38);
-      box-shadow: 0 14px 30px rgba(124,58,237,.10);
-    }
-    .badge{
-      font-size: 10px;
-      font-weight: 900;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(8,12,18,.55);
-      color: rgba(231,234,241,.88);
-      white-space:nowrap;
-    }
-    .badge.p1{ border-color: rgba(124,58,237,.35); background: rgba(124,58,237,.12); }
-    .badge.p2{ border-color: rgba(34,197,94,.30); background: rgba(34,197,94,.10); }
-    .badge.p3{ border-color: rgba(245,158,11,.30); background: rgba(245,158,11,.10); }
-
-    /* Main */
-    .main{
-      padding: 16px;
+      gap:12px;
+      min-width:0;
     }
 
     .topbar{
-      border:1px solid var(--line2);
-      background: rgba(15,22,35,.62);
-      backdrop-filter: blur(10px);
-      border-radius: var(--r22);
-      box-shadow: var(--shadow);
-      padding: 14px 14px;
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:12px;
-      flex-wrap:wrap;
+      padding:14px;
+      border-radius:var(--radius);
+      background: rgba(255,255,255,.02);
+      border:1px solid var(--stroke);
     }
-    .topLeft{
+    .topbar h2{ margin:0; font-size:14px; font-weight:900; letter-spacing:.2px; }
+    .topbar .right{
       display:flex;
-      flex-direction:column;
-      gap:5px;
-      min-width: 260px;
-    }
-    .topLeft .h{
-      font-size: 14px;
-      font-weight: 900;
-      letter-spacing:.2px;
-    }
-    .topLeft .s{
-      font-size: 11px;
-      color: var(--muted);
-      font-weight: 700;
-    }
-    .topRight{
-      display:flex;
+      align-items:center;
       gap:10px;
       flex-wrap:wrap;
-      align-items:center;
       justify-content:flex-end;
     }
+
     .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      padding: 10px 12px;
-      border-radius: 999px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(17,27,43,.62);
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.03);
       color: var(--text);
-      font-weight: 900;
-      font-size: 12px;
+      padding:10px 12px;
+      border-radius:14px;
       cursor:pointer;
+      font-weight:900;
+      font-size:12px;
+      transition:.18s transform,.18s background;
       user-select:none;
-      transition: transform .12s ease, background .12s ease, border-color .12s ease;
-      white-space:nowrap;
     }
-    .btn:hover{ transform: translateY(-1px); background: rgba(20,33,54,.72); border-color: rgba(255,255,255,.16); }
-    .btn:active{ transform: translateY(0px); }
-    .btn.purple{ background: rgba(124,58,237,.16); border-color: rgba(124,58,237,.34); }
-    .btn.green{ background: rgba(34,197,94,.12); border-color: rgba(34,197,94,.30); }
-    .btn.gold{ background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.30); }
-    .btn.ghost{ background: rgba(17,27,43,.40); }
+    .btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,.05); }
+    .btn.primary{ background: rgba(139,92,246,.14); border-color: rgba(139,92,246,.32); }
+    .btn.good{ background: rgba(34,197,94,.14); border-color: rgba(34,197,94,.32); }
+    .btn.warn{ background: rgba(245,158,11,.14); border-color: rgba(245,158,11,.32); }
+    .btn.danger{ background: rgba(239,68,68,.14); border-color: rgba(239,68,68,.32); }
 
-    .grid{
-      margin-top: 14px;
-      display:grid;
-      grid-template-columns: 1.2fr .9fr;
-      gap: 14px;
-    }
-    @media (max-width: 1100px){
-      .grid{ grid-template-columns: 1fr; }
+    .grid{ display:grid; grid-template-columns: 1.2fr .8fr; gap:12px; min-width:0; }
+    @media (max-width: 980px){
+      .app{ grid-template-columns: 1fr; }
+      .sidebar{ position:relative; height:auto; top:auto; }
+      .grid{ grid-template-columns:1fr; }
     }
 
-    .card{
-      border:1px solid var(--line2);
-      background: rgba(15,22,35,.58);
-      border-radius: var(--r22);
-      box-shadow: var(--shadow);
-      overflow:hidden;
+    .panel{
+      padding:14px;
+      border-radius:var(--radius);
+      background: rgba(255,255,255,.02);
+      border:1px solid var(--stroke);
+      min-width:0;
     }
-    .cardHead{
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--line2);
-      background: rgba(12,18,32,.28);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-    .cardHead .t{
-      font-size: 12px;
-      font-weight: 950;
-      letter-spacing:.2px;
-    }
-    .cardHead .m{
-      font-size: 11px;
-      color: var(--muted);
-      font-weight: 750;
-      margin-top: 2px;
-    }
-    .cardBody{
-      padding: 14px;
-      display:flex;
-      flex-direction:column;
-      gap: 12px;
-    }
-    .box{
-      border:1px solid rgba(255,255,255,.08);
-      background: rgba(12,18,32,.36);
-      border-radius: var(--r16);
-      padding: 12px;
-    }
+    .panel h3{ margin:0 0 10px; font-size:13px; font-weight:900; color:rgba(255,255,255,.90); }
+    .muted{ color:var(--muted); font-size:12px; }
+    .muted2{ color:var(--muted2); font-size:12px; }
 
-    .row2{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-    @media (max-width: 720px){
-      .row2{ grid-template-columns: 1fr; }
-    }
+    .table{ width:100%; border-collapse:separate; border-spacing:0 10px; font-size:12px; }
+    .table th{ text-align:left; color:var(--muted); font-weight:900; font-size:11px; padding:0 10px; }
+    .row{ background: rgba(255,255,255,.03); border:1px solid var(--stroke); border-radius:14px; }
+    .table td{ padding:12px 10px; vertical-align:middle; }
 
-    label{
-      display:block;
-      font-size: 11px;
-      color: rgba(167,176,192,.92);
-      font-weight: 900;
-      margin-bottom: 7px;
-    }
-    .input, .select, textarea{
+    .input{
       width:100%;
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(8,12,18,.62);
-      color: var(--text);
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.03);
+      color:var(--text);
       outline:none;
-      font-weight: 800;
-      font-size: 12px;
-    }
-    textarea{ min-height: 92px; resize: vertical; }
-    .hint{
-      margin-top: 8px;
-      font-size: 11px;
-      color: rgba(167,176,192,.82);
-      line-height: 1.35;
+      font-weight:900;
+      font-size:12px;
     }
 
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding: 8px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.08);
-      background: rgba(17,27,43,.50);
-      font-size: 11px;
-      font-weight: 900;
-      color: rgba(231,234,241,.92);
-      white-space:nowrap;
-    }
-    .pill.ok .dot{ background: var(--ok); }
-    .pill.warn .dot{ background: var(--warn); }
-    .pill.bad .dot{ background: var(--bad); }
-
-    .btnRow{ display:flex; gap:10px; flex-wrap:wrap; }
-
-    .table{
-      width:100%;
-      border-collapse: collapse;
-      border:1px solid rgba(255,255,255,.08);
-      border-radius: 14px;
-      overflow:hidden;
-      background: rgba(8,12,18,.46);
-    }
-    .table th, .table td{
-      padding: 10px;
-      border-bottom: 1px solid rgba(255,255,255,.06);
-      font-size: 12px;
-      font-weight: 800;
-      text-align:left;
-    }
-    .table th{ color: var(--muted); background: rgba(12,18,32,.30); font-weight: 950; }
-    .table tr:last-child td{ border-bottom:none; }
-    .muted{ color: var(--muted); }
-
-    .switchGrid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-    @media (max-width: 720px){
-      .switchGrid{ grid-template-columns: 1fr; }
-    }
-    .toggle{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      padding: 10px 12px;
-      border-radius: 14px;
-      border:1px solid rgba(255,255,255,.08);
-      background: rgba(8,12,18,.40);
-    }
-    .toggle .k{
-      font-size: 12px;
-      font-weight: 950;
-    }
-    .toggle .v{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding: 7px 10px;
-      border-radius: 999px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(17,27,43,.55);
-      font-size: 11px;
-      font-weight: 950;
-      cursor:pointer;
-      user-select:none;
-      white-space:nowrap;
-    }
-    .v.on{ border-color: rgba(30,227,165,.32); background: rgba(30,227,165,.10); }
-    .v.off{ border-color: rgba(255,77,109,.28); background: rgba(255,77,109,.08); }
-
-    .logBox{
-      border:1px solid rgba(255,255,255,.08);
-      background: rgba(8,12,18,.52);
-      border-radius: 14px;
-      padding: 10px;
-      height: 260px;
+    .logbox{
+      background: rgba(0,0,0,.25);
+      border:1px solid var(--stroke);
+      border-radius:16px;
+      padding:12px;
+      min-height:120px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size:11px;
+      color: rgba(255,255,255,.86);
       overflow:auto;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size: 11px;
-      line-height: 1.35;
-      white-space: pre-wrap;
-      color: rgba(231,234,241,.88);
+      white-space:pre-wrap;
     }
 
-    .sep{
-      height:1px;
-      background: rgba(255,255,255,.06);
-      margin: 2px 0;
+    /* Chat */
+    .chatWrap{ display:flex; flex-direction:column; gap:10px; min-height:520px; }
+    .chatHistory{
+      flex:1;
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.22);
+      border-radius:16px;
+      padding:12px;
+      overflow:auto;
+      font-size:12px;
+      color: rgba(255,255,255,.88);
+      line-height:1.45;
     }
-
-    .hide{ display:none !important; }
+    .bubble{
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.03);
+      margin:8px 0;
+      max-width: 92%;
+      white-space:pre-wrap;
+    }
+    .bubble.me{
+      background: rgba(139,92,246,.12);
+      border-color: rgba(139,92,246,.28);
+      margin-left:auto;
+    }
+    .bubble.ai{
+      background: rgba(34,197,94,.10);
+      border-color: rgba(34,197,94,.26);
+    }
+    .chatRow{ display:flex; gap:10px; align-items:center; }
+    .smallbtn{ padding:9px 10px; border-radius:12px; font-size:12px; font-weight:900; }
   </style>
 </head>
 
 <body>
   <div class="app">
-    <!-- SIDEBAR -->
-    <aside class="side">
+    <aside class="sidebar card">
       <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
+        <div class="logo"></div>
         <div>
           <h1>BossMind Admin</h1>
-          <p>Automation • Switches • Jobs • Queue • Logs</p>
+          <p class="muted">Automation • Switches • Jobs • Queue</p>
         </div>
       </div>
 
-      <div class="sideBlock">
-        <div class="sideHead">
-          <div class="t">System Status</div>
-          <div class="chip" title="Backend status depends on your API Base URL">
-            <span class="dot" id="sbDot"></span>
-            <span id="sbText">Backend: down</span>
-          </div>
-        </div>
-        <div class="sideNav">
-          <button class="navBtn active" data-view="overview">
-            <span>Command Center</span>
-            <span class="badge">Global</span>
-          </button>
-          <button class="navBtn" data-view="builder">
-            <span>AI Builder</span>
-            <span class="badge p1">Project 1</span>
-          </button>
-          <button class="navBtn" data-view="video">
-            <span>AI Video Generator</span>
-            <span class="badge p2">Project 2</span>
-          </button>
-          <button class="navBtn" data-view="stock">
-            <span>AI Stock System</span>
-            <span class="badge p3">Project 3</span>
-          </button>
-          <button class="navBtn" data-view="logs">
-            <span>Logs & Audit</span>
-            <span class="badge">Ops</span>
-          </button>
-        </div>
+      <div class="panel" style="padding:12px">
+        <div class="muted2">System Status</div>
+        <div style="height:10px"></div>
+        <span class="chip"><span class="dot" id="dotBackend"></span><span id="txtBackend">Backend: unknown</span></span>
       </div>
 
-      <div class="sideBlock">
-        <div class="sideHead">
-          <div class="t">Quick Actions</div>
-          <div class="chip">
-            <span class="dot" style="background:var(--warn)"></span>
-            <span id="clock">—</span>
+      <div class="nav">
+        <button class="navbtn active" data-view="command">
+          <div class="navleft">
+            <div class="navtitle">Command Center</div>
+            <div class="navsub">Global</div>
           </div>
-        </div>
-        <div class="sideNav">
-          <button class="btn purple" id="qaRefresh">↻ Refresh UI</button>
-          <button class="btn green" id="qaHealth">✓ Health Check</button>
-          <button class="btn gold" id="qaSync">⇄ Sync (Sheet/DB/Config)</button>
-          <button class="btn ghost" id="qaAuto">Auto: OFF</button>
+          <span class="badge">Global</span>
+        </button>
+
+        <button class="navbtn" data-view="builder">
+          <div class="navleft">
+            <div class="navtitle">AI Builder</div>
+            <div class="navsub">Project 1</div>
+          </div>
+          <span class="badge p1">Project 1</span>
+        </button>
+
+        <button class="navbtn" data-view="video">
+          <div class="navleft">
+            <div class="navtitle">AI Video Generator</div>
+            <div class="navsub">Project 2</div>
+          </div>
+          <span class="badge p2">Project 2</span>
+        </button>
+
+        <button class="navbtn" data-view="stock">
+          <div class="navleft">
+            <div class="navtitle">AI Stock System</div>
+            <div class="navsub">Project 3</div>
+          </div>
+          <span class="badge p3">Project 3</span>
+        </button>
+
+        <!-- ✅ NEW CHAT BUTTON -->
+        <button class="navbtn" data-view="chat">
+          <div class="navleft">
+            <div class="navtitle">AI Chat</div>
+            <div class="navsub">Support & future updates</div>
+          </div>
+          <span class="badge">Chat</span>
+        </button>
+
+        <button class="navbtn" data-view="logs">
+          <div class="navleft">
+            <div class="navtitle">Logs & Audit</div>
+            <div class="navsub">Ops</div>
+          </div>
+          <span class="badge">Ops</span>
+        </button>
+
+        <button class="navbtn" data-view="settings">
+          <div class="navleft">
+            <div class="navtitle">System Settings</div>
+            <div class="navsub">Connection & switches</div>
+          </div>
+          <span class="badge">Config</span>
+        </button>
+      </div>
+
+      <div class="panel">
+        <h3 style="margin:0 0 10px">Quick Actions</h3>
+        <div class="muted2" id="clock">—</div>
+        <div style="height:10px"></div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button class="btn primary" id="btnRefreshUI">↻ Refresh UI</button>
+          <button class="btn good" id="btnHealth">✓ Health Check</button>
+          <button class="btn warn" id="btnSync">⇄ Sync (Sheet/DB/Config)</button>
+          <button class="btn" id="btnAuto">Auto: OFF</button>
         </div>
       </div>
     </aside>
 
-    <!-- MAIN -->
-    <main class="main">
+    <main class="main card">
       <div class="topbar">
-        <div class="topLeft">
-          <div class="h" id="pageTitle">Command Center</div>
-          <div class="s" id="pageSub">Global settings + cross-project controls</div>
-        </div>
-
-        <div class="topRight">
-          <span class="pill bad" id="apiPill"><span class="dot"></span><span id="apiPillText">API: not set</span></span>
-          <button class="btn ghost" id="btnOpenAdminHtml" title="Open /admin.html">Open admin.html</button>
-          <button class="btn ghost" id="btnOpenAutomationHtml" title="Open /automation.html">Open automation.html</button>
+        <h2 id="viewTitle">Logs & Audit</h2>
+        <div class="right">
+          <span class="chip"><span class="dot" id="dotApi"></span><span id="txtApi">API: not set</span></span>
+          <button class="btn smallbtn" onclick="location.href='/admin.html'">Open admin.html</button>
+          <button class="btn smallbtn" onclick="location.href='/automation.html'">Open automation.html</button>
         </div>
       </div>
 
       <div class="grid">
-        <!-- LEFT AREA (dynamic view content) -->
-        <section class="card" id="leftCard">
-          <div class="cardHead">
+        <section class="panel" id="panelLeft"></section>
+
+        <section class="panel" id="panelRight">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px">
             <div>
-              <div class="t" id="leftTitle">Global Connection</div>
-              <div class="m" id="leftMeta">One base URL powers all 3 projects endpoints</div>
+              <h3 style="margin:0">Operations Console</h3>
+              <div class="muted2">Status • logs • quick verification</div>
             </div>
-            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-              <span class="pill bad" id="backendPill"><span class="dot"></span><span id="backendPillText">Backend: down</span></span>
-              <button class="btn ghost" id="btnPing">Ping</button>
-            </div>
-          </div>
-
-          <div class="cardBody" id="leftBody">
-            <!-- Connection -->
-            <div class="box">
-              <div class="row2">
-                <div>
-                  <label for="apiBase">API Base URL (Railway / Production)</label>
-                  <input class="input" id="apiBase" placeholder="https://your-service.up.railway.app" />
-                  <div class="hint">Used for every action in this dashboard (jobs, switches, logs, status).</div>
-                </div>
-                <div>
-                  <label for="adminKey">Admin Key (optional)</label>
-                  <input class="input" id="adminKey" placeholder="x-admin-key value if your backend requires it" />
-                  <div class="hint">Sent as header <b>x-admin-key</b> on every request.</div>
-                </div>
-              </div>
-              <div class="btnRow" style="margin-top:10px;">
-                <button class="btn purple" id="btnSaveConn">Save Connection</button>
-                <button class="btn green" id="btnRunHealth">Run Health</button>
-              </div>
-            </div>
-
-            <!-- Global Switches -->
-            <div class="box">
-              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-                <div style="font-weight:950; font-size:12px;">Global Governance</div>
-                <div class="btnRow">
-                  <button class="btn gold" id="btnApplyMaintenance">Apply Maintenance</button>
-                  <button class="btn ghost" id="btnFetchSwitches">Fetch Switches</button>
-                </div>
-              </div>
-
-              <div class="row2" style="margin-top:10px;">
-                <div>
-                  <label for="maintenanceMode">Maintenance Mode</label>
-                  <select class="select" id="maintenanceMode">
-                    <option value="off">OFF</option>
-                    <option value="on">ON</option>
-                  </select>
-                </div>
-                <div>
-                  <label for="featureSet">Feature Switch Set</label>
-                  <select class="select" id="featureSet">
-                    <option value="builder">AI Builder (Project 1)</option>
-                    <option value="video">AI Video Generator (Project 2)</option>
-                    <option value="stock">AI Stock System (Project 3)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="switchGrid" style="margin-top:10px;">
-                <div class="toggle">
-                  <div class="k">DeepSeek Engine</div>
-                  <div class="v off" data-switch="deepseek">OFF</div>
-                </div>
-                <div class="toggle">
-                  <div class="k">Auto-Disable on Errors</div>
-                  <div class="v off" data-switch="autoDisableOnErrors">OFF</div>
-                </div>
-                <div class="toggle">
-                  <div class="k">Backups</div>
-                  <div class="v off" data-switch="backups">OFF</div>
-                </div>
-                <div class="toggle">
-                  <div class="k">Notifications</div>
-                  <div class="v off" data-switch="notifications">OFF</div>
-                </div>
-                <div class="toggle">
-                  <div class="k">Webhook Triggers</div>
-                  <div class="v off" data-switch="webhookTriggers">OFF</div>
-                </div>
-                <div class="toggle">
-                  <div class="k">Stripe Logs</div>
-                  <div class="v off" data-switch="stripeLogs">OFF</div>
-                </div>
-              </div>
-
-              <div class="hint" style="margin-top:10px;">
-                Recommended backend endpoints:<br>
-                <b>GET /api/admin/switches?set=builder|video|stock</b><br>
-                <b>POST /api/admin/switches</b> with <b>{ set, key, action }</b><br>
-                <b>POST /api/admin/maintenance</b> with <b>{ mode }</b>
-              </div>
-            </div>
-
-            <!-- Cross-project job runner -->
-            <div class="box">
-              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-                <div style="font-weight:950; font-size:12px;">Universal Job Runner</div>
-                <span class="pill warn"><span class="dot"></span><span>Safe mode: UI-ready</span></span>
-              </div>
-
-              <div class="row2" style="margin-top:10px;">
-                <div>
-                  <label for="jobScope">Target Project</label>
-                  <select class="select" id="jobScope">
-                    <option value="builder">Project 1 — AI Builder</option>
-                    <option value="video">Project 2 — AI Video Generator</option>
-                    <option value="stock">Project 3 — AI Stock System</option>
-                  </select>
-                </div>
-                <div>
-                  <label for="jobName">Job Name</label>
-                  <input class="input" id="jobName" placeholder="e.g. builder.exportLayout / video.queueFromSheet / stock.runSignals" />
-                </div>
-              </div>
-
-              <div style="margin-top:10px;">
-                <label for="jobPayload">Job Payload (JSON)</label>
-                <textarea id="jobPayload" class="input" placeholder='{"note":"optional","priority":"normal"}'></textarea>
-                <div class="hint">Sent to <b>POST /api/admin/jobs</b> as <b>{ job, scope, payload }</b>.</div>
-              </div>
-
-              <div class="btnRow" style="margin-top:10px;">
-                <button class="btn purple" id="btnRunJob">Run Job</button>
-                <button class="btn ghost" id="btnFillPayload">Fill Default Payload</button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- RIGHT AREA (logs + status) -->
-        <section class="card" id="rightCard">
-          <div class="cardHead">
-            <div>
-              <div class="t">Operations Console</div>
-              <div class="m">Status • logs • quick verification</div>
-            </div>
-            <div class="btnRow">
-              <button class="btn ghost" id="btnLoadLogs">Load Logs</button>
-              <button class="btn ghost" id="btnClearLogs">Clear</button>
-              <button class="btn ghost" id="btnCopyLogs">Copy</button>
+            <div style="display:flex; gap:10px; flex-wrap:wrap">
+              <button class="btn" id="loadLogs2">Load Logs</button>
+              <button class="btn" id="clearLogs">Clear</button>
+              <button class="btn" id="copyLogs">Copy</button>
+              <button class="btn" id="btnPing">Ping</button>
             </div>
           </div>
 
-          <div class="cardBody">
-            <div class="box">
-              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-                <div style="font-weight:950; font-size:12px;">Live Status Snapshot</div>
-                <div class="btnRow">
-                  <button class="btn green" id="btnRefreshStatus">Refresh</button>
-                </div>
-              </div>
-              <div class="sep"></div>
-              <table class="table">
-                <thead>
-                  <tr><th style="width:52%">Metric</th><th>Value</th></tr>
-                </thead>
-                <tbody>
-                  <tr><td>Active View</td><td id="mView">Command Center</td></tr>
-                  <tr><td>API Base</td><td id="mApi">—</td></tr>
-                  <tr><td>Backend</td><td id="mBackend">down</td></tr>
-                  <tr><td>Last Action</td><td id="mLast">—</td></tr>
-                </tbody>
-              </table>
-              <div class="hint" style="margin-top:10px;">
-                Health endpoint: <b>GET /health</b>
-              </div>
-            </div>
+          <div style="height:12px"></div>
 
-            <div class="box">
-              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-                <div style="font-weight:950; font-size:12px;">Logs</div>
-                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                  <label style="margin:0;">Filter</label>
-                  <select class="select" id="logFilter" style="width:200px;">
-                    <option value="all">All</option>
-                    <option value="jobs">Jobs</option>
-                    <option value="switches">Switches</option>
-                    <option value="health">Health</option>
-                    <option value="errors">Errors</option>
-                  </select>
-                </div>
-              </div>
-              <div class="logBox" id="logOut">Logs will appear here…</div>
-              <div class="hint" style="margin-top:10px;">
-                Endpoint expected: <b>GET /api/admin/logs?filter=all|jobs|switches|health|errors</b>
+          <div class="panel" style="padding:14px; background:rgba(255,255,255,.02)">
+            <div style="display:flex; align-items:center; justify-content:space-between">
+              <h3 style="margin:0">Live Status Snapshot</h3>
+              <button class="btn" id="btnMiniRefresh">Refresh</button>
+            </div>
+            <div style="height:10px"></div>
+            <table class="table">
+              <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr class="row"><td>Active View</td><td id="ssView">—</td></tr>
+                <tr class="row"><td>API Base</td><td id="ssApi">—</td></tr>
+                <tr class="row"><td>Backend</td><td id="ssBackend">—</td></tr>
+                <tr class="row"><td>Last Action</td><td id="ssLast">—</td></tr>
+              </tbody>
+            </table>
+            <div style="height:10px"></div>
+            <div class="muted2">Health endpoint: GET <b>/health</b></div>
+          </div>
+
+          <div style="height:12px"></div>
+
+          <div class="panel" style="padding:14px">
+            <div style="display:flex; align-items:center; justify-content:space-between">
+              <h3 style="margin:0">Logs</h3>
+              <div style="display:flex; gap:10px; align-items:center">
+                <div class="muted2">Filter</div>
+                <select class="input" style="width:140px; padding:10px" id="logFilter">
+                  <option>All</option>
+                </select>
               </div>
             </div>
+            <div style="height:10px"></div>
+            <div class="logbox" id="logbox2"></div>
           </div>
         </section>
       </div>
-
-      <!-- Hidden templates for project views (swapped into #leftBody) -->
-      <template id="tplBuilder">
-        <div class="box">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-            <div>
-              <div style="font-weight:950; font-size:12px;">AI Builder — Core Tasks</div>
-              <div class="hint">Design automation, export, Supabase sync, theme rotation, previews.</div>
-            </div>
-            <span class="pill"><span class="dot" style="background:var(--p1)"></span><span>Project 1</span></span>
-          </div>
-
-          <div class="btnRow" style="margin-top:10px;">
-            <button class="btn green" data-job="builder.generatePreview">Generate Preview</button>
-            <button class="btn purple" data-job="builder.exportLayout">Export Layout</button>
-            <button class="btn gold" data-job="builder.syncSupabase">Sync Supabase</button>
-            <button class="btn ghost" data-job="builder.rotateTheme">Rotate Theme</button>
-            <button class="btn ghost" data-job="builder.auditLayout">Layout Audit</button>
-          </div>
-
-          <div class="hint" style="margin-top:10px;">
-            Recommended: <b>POST /api/admin/jobs</b> with <b>{ job, scope:"builder", payload }</b><br>
-            Status: <b>GET /api/admin/status/builder</b>
-          </div>
-        </div>
-
-        <div class="box">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-            <div style="font-weight:950; font-size:12px;">Builder Settings</div>
-            <button class="btn ghost" id="btnSaveBuilderSettings">Save Settings</button>
-          </div>
-
-          <div class="row2" style="margin-top:10px;">
-            <div>
-              <label for="bThemeMode">Theme Mode</label>
-              <select class="select" id="bThemeMode">
-                <option value="luxury-dark">Luxury Dark</option>
-                <option value="luxury-light">Luxury Light</option>
-                <option value="auto-rotate">Auto Rotate Weekly</option>
-                <option value="manual">Manual Only</option>
-              </select>
-            </div>
-            <div>
-              <label for="bSecurity">Admin Protection</label>
-              <select class="select" id="bSecurity">
-                <option value="admin-only">Admin Only</option>
-                <option value="key-required">Key Required</option>
-                <option value="open-ui">Open UI (not recommended)</option>
-              </select>
-            </div>
-          </div>
-
-          <div style="margin-top:10px;">
-            <label for="bNotes">Builder Notes / Rules</label>
-            <textarea id="bNotes" class="input" placeholder="Saved locally. Optional."></textarea>
-          </div>
-        </div>
-      </template>
-
-      <template id="tplVideo">
-        <div class="box">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-            <div>
-              <div style="font-weight:950; font-size:12px;">AI Video Generator — Production Pipeline</div>
-              <div class="hint">Queue → Review → Render → Publish (YouTube/TikTok) → Notify (Telegram).</div>
-            </div>
-            <span class="pill"><span class="dot" style="background:var(--p2)"></span><span>Project 2</span></span>
-          </div>
-
-          <div class="btnRow" style="margin-top:10px;">
-            <button class="btn green" data-job="video.queueFromSheet">Queue from Google Sheet</button>
-            <button class="btn purple" data-job="video.reviewScenario">Scenario Review</button>
-            <button class="btn gold" data-job="video.renderNext">Render Next</button>
-            <button class="btn ghost" data-job="video.publish">Publish</button>
-            <button class="btn ghost" data-job="video.syncSubtitles">Sync Subtitles</button>
-          </div>
-
-          <div class="hint" style="margin-top:10px;">
-            Recommended: <b>POST /api/admin/jobs</b> with <b>{ job, scope:"video", payload }</b><br>
-            Queue: <b>GET /api/admin/queue/video</b> (optional)
-          </div>
-        </div>
-
-        <div class="box">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-            <div style="font-weight:950; font-size:12px;">Video Settings</div>
-            <button class="btn ghost" id="btnSaveVideoSettings">Save Settings</button>
-          </div>
-
-          <div class="row2" style="margin-top:10px;">
-            <div>
-              <label for="vType">Default Video Type</label>
-              <select class="select" id="vType">
-                <option value="funny">Funny</option>
-                <option value="drama">Drama</option>
-                <option value="thriller">Thriller</option>
-                <option value="adventure">Adventure</option>
-                <option value="educational">Educational</option>
-                <option value="motivation">Motivation</option>
-              </select>
-            </div>
-            <div>
-              <label for="vLang">Default Language</label>
-              <select class="select" id="vLang">
-                <option value="auto">Auto (viewer IP)</option>
-                <option value="ar">Arabic</option>
-                <option value="en">English</option>
-                <option value="fr">French</option>
-                <option value="de">German</option>
-                <option value="es">Spanish</option>
-                <option value="ru">Russian</option>
-                <option value="sq">Albanian</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="row2" style="margin-top:10px;">
-            <div>
-              <label for="vLen">Target Video Length</label>
-              <select class="select" id="vLen">
-                <option value="10-12">10–12 minutes</option>
-                <option value="shorts">Shorts (Auto)</option>
-                <option value="custom">Custom</option>
-              </select>
-            </div>
-            <div>
-              <label for="vNotify">Publish Notifications</label>
-              <select class="select" id="vNotify">
-                <option value="telegram">Telegram TXT</option>
-                <option value="sms">SMS TXT</option>
-                <option value="off">OFF</option>
-              </select>
-            </div>
-          </div>
-
-          <div style="margin-top:10px;">
-            <label for="vSheet">Google Sheet URL (Queue)</label>
-            <input class="input" id="vSheet" placeholder="https://docs.google.com/spreadsheets/d/..." />
-          </div>
-
-          <div class="hint" style="margin-top:10px;">
-            These are saved locally for UI. Backend can optionally read them via job payload.
-          </div>
-        </div>
-      </template>
-
-      <template id="tplStock">
-        <div class="box">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-            <div>
-              <div style="font-weight:950; font-size:12px;">AI Stock System — Controls</div>
-              <div class="hint">Watchlist → Signals → Risk Scan → Reports. (Stock only)</div>
-            </div>
-            <span class="pill"><span class="dot" style="background:var(--p3)"></span><span>Project 3</span></span>
-          </div>
-
-          <div class="btnRow" style="margin-top:10px;">
-            <button class="btn green" data-job="stock.syncWatchlist">Sync Watchlist</button>
-            <button class="btn purple" data-job="stock.runSignals">Run AI Signals</button>
-            <button class="btn gold" data-job="stock.riskScan">Run Risk Scan</button>
-            <button class="btn ghost" data-job="stock.exportReport">Export Report</button>
-            <button class="btn ghost" data-job="stock.taxSnapshot">Tax Snapshot</button>
-          </div>
-
-          <div class="hint" style="margin-top:10px;">
-            Recommended: <b>POST /api/admin/jobs</b> with <b>{ job, scope:"stock", payload }</b><br>
-            Status: <b>GET /api/admin/status/stock</b>
-          </div>
-        </div>
-
-        <div class="box">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-            <div style="font-weight:950; font-size:12px;">Stock Settings</div>
-            <button class="btn ghost" id="btnSaveStockSettings">Save Settings</button>
-          </div>
-
-          <div class="row2" style="margin-top:10px;">
-            <div>
-              <label for="sMarket">Preferred Market</label>
-              <select class="select" id="sMarket">
-                <option value="nasdaq">NASDAQ</option>
-                <option value="nyse">NYSE</option>
-                <option value="tsx">TSX</option>
-                <option value="global">Global</option>
-              </select>
-            </div>
-            <div>
-              <label for="sMode">Risk Mode</label>
-              <select class="select" id="sMode">
-                <option value="conservative">Conservative</option>
-                <option value="balanced">Balanced</option>
-                <option value="aggressive">Aggressive</option>
-              </select>
-            </div>
-          </div>
-
-          <div style="margin-top:10px;">
-            <label for="sWatch">Watchlist (comma-separated tickers)</label>
-            <input class="input" id="sWatch" placeholder="AAPL, MSFT, NVDA" />
-            <div class="hint">Saved locally. Backend can fetch/watchlist via your own endpoint later.</div>
-          </div>
-
-          <div style="margin-top:10px;">
-            <label for="sNotes">Compliance / Tax Notes</label>
-            <textarea id="sNotes" class="input" placeholder="Saved locally. Optional."></textarea>
-          </div>
-        </div>
-      </template>
-
-      <template id="tplLogs">
-        <div class="box">
-          <div style="font-weight:950; font-size:12px;">Audit & Trace</div>
-          <div class="hint">Use this to confirm actions and capture a clean operational trail.</div>
-          <div class="btnRow" style="margin-top:10px;">
-            <button class="btn ghost" id="btnLoadLogs2">Load Logs</button>
-            <button class="btn ghost" id="btnExportLocal">Export Local Settings</button>
-            <button class="btn ghost" id="btnResetLocal">Reset Local Settings</button>
-          </div>
-          <div class="hint" style="margin-top:10px;">
-            Export includes: connection + project settings + UI switches.
-          </div>
-        </div>
-
-        <div class="box">
-          <div style="font-weight:950; font-size:12px;">Local Snapshot</div>
-          <table class="table" style="margin-top:10px;">
-            <thead><tr><th style="width:52%">Key</th><th>Value</th></tr></thead>
-            <tbody>
-              <tr><td>Connection</td><td id="lsConn">—</td></tr>
-              <tr><td>Builder</td><td id="lsB">—</td></tr>
-              <tr><td>Video</td><td id="lsV">—</td></tr>
-              <tr><td>Stock</td><td id="lsS">—</td></tr>
-              <tr><td>Switches</td><td id="lsSw">—</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </template>
-
-      <script>
-        // ==========================
-        // BossMind Advanced Admin UI
-        // ==========================
-
-        const LS = {
-          apiBase: "bm_api_base",
-          adminKey: "bm_admin_key",
-          autoMode: "bm_auto_mode",
-          view: "bm_active_view",
-
-          builder: "bm_builder_settings",
-          video: "bm_video_settings",
-          stock: "bm_stock_settings",
-
-          switches: "bm_switches_state",
-          last: "bm_last_action"
-        };
-
-        const $ = (id) => document.getElementById(id);
-
-        const state = {
-          view: localStorage.getItem(LS.view) || "overview",
-          switches: safeJson(localStorage.getItem(LS.switches), {
-            deepseek:false,
-            autoDisableOnErrors:false,
-            backups:false,
-            notifications:false,
-            webhookTriggers:false,
-            stripeLogs:false
-          })
-        };
-
-        function safeJson(txt, fallback){
-          try { return txt ? JSON.parse(txt) : fallback; }
-          catch { return fallback; }
-        }
-
-        function nowStr(){
-          return new Date().toLocaleString();
-        }
-
-        function log(line){
-          const out = $("logOut");
-          const ts = new Date().toISOString().replace("T"," ").replace("Z","");
-          if(out.textContent.trim() === "Logs will appear here…") out.textContent = "";
-          out.textContent += `[${ts}] ${line}\n`;
-          out.scrollTop = out.scrollHeight;
-          localStorage.setItem(LS.last, line);
-          $("mLast").textContent = line;
-        }
-
-        function setBackendUI(isUp){
-          const dotA = $("sbDot");
-          const txtA = $("sbText");
-          const dotB = $("backendPill").querySelector(".dot");
-          const txtB = $("backendPillText");
-          const pill = $("backendPill");
-
-          const dotC = $("apiPill").querySelector(".dot");
-          const apiBase = getApiBase();
-
-          if(apiBase){
-            $("apiPill").classList.remove("bad");
-            $("apiPill").classList.add("ok");
-            $("apiPillText").textContent = "API: set";
-            $("mApi").textContent = apiBase;
-          } else {
-            $("apiPill").classList.remove("ok");
-            $("apiPill").classList.add("bad");
-            $("apiPillText").textContent = "API: not set";
-            $("mApi").textContent = "—";
-          }
-
-          if(isUp){
-            dotA.style.background = "var(--ok)";
-            txtA.textContent = "Backend: up";
-            pill.classList.remove("bad");
-            pill.classList.add("ok");
-            dotB.style.background = "var(--ok)";
-            txtB.textContent = "Backend: up";
-            $("mBackend").textContent = "up";
-            dotC.style.background = "var(--ok)";
-          }else{
-            dotA.style.background = "var(--bad)";
-            txtA.textContent = "Backend: down";
-            pill.classList.remove("ok");
-            pill.classList.add("bad");
-            dotB.style.background = "var(--bad)";
-            txtB.textContent = "Backend: down";
-            $("mBackend").textContent = "down";
-            dotC.style.background = apiBase ? "var(--warn)" : "var(--bad)";
-          }
-        }
-
-        function getApiBase(){ return (localStorage.getItem(LS.apiBase) || "").trim(); }
-        function getAdminKey(){ return (localStorage.getItem(LS.adminKey) || "").trim(); }
-
-        function headers(){
-          const h = { "Content-Type":"application/json" };
-          const key = getAdminKey();
-          if(key) h["x-admin-key"] = key;
-          return h;
-        }
-
-        async function safeFetch(url, opts={}){
-          try{
-            const res = await fetch(url, opts);
-            const text = await res.text();
-            let json = null;
-            try{ json = JSON.parse(text); }catch{}
-            return { ok: res.ok, status: res.status, text, json };
-          }catch(err){
-            return { ok:false, status:0, text:String(err), json:null };
-          }
-        }
-
-        // ===== View swapping =====
-        function setView(view){
-          state.view = view;
-          localStorage.setItem(LS.view, view);
-
-          document.querySelectorAll(".navBtn").forEach(b=>{
-            b.classList.toggle("active", b.getAttribute("data-view") === view);
-          });
-
-          const leftTitle = $("leftTitle");
-          const leftMeta  = $("leftMeta");
-          const leftBody  = $("leftBody");
-
-          // default: overview content is already in DOM
-          if(view === "overview"){
-            $("pageTitle").textContent = "Command Center";
-            $("pageSub").textContent = "Global settings + cross-project controls";
-            leftTitle.textContent = "Global Connection";
-            leftMeta.textContent = "One base URL powers all 3 projects endpoints";
-            // restore overview DOM by reloading the page section from a cached HTML snapshot
-            leftBody.innerHTML = window.__OVERVIEW_HTML;
-            wireOverview();
-            $("mView").textContent = "Command Center";
-            log("Switched to Command Center");
-            return;
-          }
-
-          const map = {
-            builder: { title:"AI Builder", sub:"Project 1 settings + tasks", tpl:"tplBuilder", ltitle:"AI Builder Console", lmeta:"Tasks + settings for Project 1" },
-            video:   { title:"AI Video Generator", sub:"Project 2 settings + pipeline", tpl:"tplVideo", ltitle:"AI Video Generator Console", lmeta:"Queue + type/language + publish flow" },
-            stock:   { title:"AI Stock System", sub:"Project 3 settings + operations", tpl:"tplStock", ltitle:"AI Stock System Console", lmeta:"Signals + risk + reporting" },
-            logs:    { title:"Logs & Audit", sub:"Operational trace and local snapshot", tpl:"tplLogs", ltitle:"Logs & Audit", lmeta:"Audit trail + export/reset local settings" }
-          };
-
-          const cfg = map[view];
-          $("pageTitle").textContent = cfg.title;
-          $("pageSub").textContent = cfg.sub;
-          leftTitle.textContent = cfg.ltitle;
-          leftMeta.textContent = cfg.lmeta;
-
-          const tpl = document.getElementById(cfg.tpl);
-          leftBody.innerHTML = "";
-          leftBody.appendChild(tpl.content.cloneNode(true));
-
-          // wire common job buttons
-          wireJobButtons(view);
-          wireProjectSettings(view);
-          if(view === "logs") wireLogsTools();
-
-          $("mView").textContent = cfg.title;
-          log(`Switched to ${cfg.title}`);
-        }
-
-        // ===== Jobs =====
-        function currentScopeFromView(view){
-          if(view === "builder") return "builder";
-          if(view === "video") return "video";
-          if(view === "stock") return "stock";
-          return ($("jobScope") ? $("jobScope").value : "builder");
-        }
-
-        async function triggerJob(job, scope, payload){
-          const base = getApiBase();
-          if(!base){ setBackendUI(false); log("Blocked: API Base URL not set."); return; }
-
-          const body = { job, scope, payload: payload || {} };
-
-          // attach video prefs if scope video
-          if(scope === "video"){
-            const v = safeJson(localStorage.getItem(LS.video), {});
-            body.payload.videoType = v.type || "funny";
-            body.payload.videoLang = v.lang || "auto";
-            body.payload.videoLen  = v.len  || "10-12";
-          }
-
-          log(`Job → ${job} (scope=${scope})`);
-          const r = await safeFetch(`${base.replace(/\/$/,"")}/api/admin/jobs`, {
-            method:"POST",
-            headers: headers(),
-            body: JSON.stringify(body)
-          });
-
-          if(r.ok){
-            setBackendUI(true);
-            log(`Job accepted: ${job}`);
-          }else{
-            setBackendUI(false);
-            log(`Job failed (${r.status}): ${r.text.slice(0,240)}`);
-          }
-        }
-
-        function wireJobButtons(view){
-          document.querySelectorAll("[data-job]").forEach(btn=>{
-            btn.addEventListener("click", ()=>{
-              const job = btn.getAttribute("data-job");
-              const scope = currentScopeFromView(view);
-              triggerJob(job, scope, {});
-            });
-          });
-        }
-
-        // ===== Overview wiring (buttons exist only in overview HTML) =====
-        function wireOverview(){
-          // connection
-          $("apiBase").value = getApiBase();
-          $("adminKey").value = getAdminKey();
-
-          $("btnSaveConn").onclick = () => {
-            localStorage.setItem(LS.apiBase, $("apiBase").value.trim());
-            localStorage.setItem(LS.adminKey, $("adminKey").value.trim());
-            refreshMetrics();
-            log("Connection saved.");
-          };
-
-          $("btnRunHealth").onclick = () => runHealth();
-          $("btnPing").onclick = () => runHealth(true);
-
-          // switches
-          document.querySelectorAll("[data-switch]").forEach(elm=>{
-            elm.onclick = () => toggleSwitch(elm.getAttribute("data-switch"), elm);
-            paintSwitch(elm, state.switches[elm.getAttribute("data-switch")] === true);
-          });
-
-          $("btnApplyMaintenance").onclick = () => applyMaintenance();
-          $("btnFetchSwitches").onclick = () => fetchSwitches();
-
-          // universal job runner
-          $("btnFillPayload").onclick = () => {
-            $("jobPayload").value = JSON.stringify({ note:"optional", priority:"normal" }, null, 2);
-            log("Default payload filled.");
-          };
-
-          $("btnRunJob").onclick = () => {
-            const scope = $("jobScope").value;
-            const job = $("jobName").value.trim();
-            if(!job){ log("Blocked: Job Name is empty."); return; }
-            let payload = {};
-            const raw = ($("jobPayload").value || "").trim();
-            if(raw){
-              try{ payload = JSON.parse(raw); }
-              catch{ log("Blocked: Job Payload JSON is invalid."); return; }
-            }
-            triggerJob(job, scope, payload);
-          };
-        }
-
-        // ===== Switches =====
-        function paintSwitch(elm, on){
-          elm.classList.remove("on","off");
-          elm.classList.add(on ? "on" : "off");
-          elm.textContent = on ? "ON" : "OFF";
-        }
-        function toggleSwitch(key, elm){
-          state.switches[key] = !state.switches[key];
-          localStorage.setItem(LS.switches, JSON.stringify(state.switches));
-          paintSwitch(elm, state.switches[key]);
-          log(`Local switch toggled: ${key} = ${state.switches[key] ? "ON" : "OFF"}`);
-        }
-
-        async function applyMaintenance(){
-          const base = getApiBase();
-          if(!base){ setBackendUI(false); log("Blocked: API Base URL not set."); return; }
-          const mode = $("maintenanceMode").value;
-          log(`Apply maintenance: ${mode.toUpperCase()}`);
-          const r = await safeFetch(`${base.replace(/\/$/,"")}/api/admin/maintenance`, {
-            method:"POST",
-            headers: headers(),
-            body: JSON.stringify({ mode })
-          });
-          if(r.ok){ setBackendUI(true); log("Maintenance applied."); }
-          else { setBackendUI(false); log(`Maintenance failed (${r.status}): ${r.text.slice(0,240)}`); }
-        }
-
-        async function fetchSwitches(){
-          const base = getApiBase();
-          if(!base){ setBackendUI(false); log("Blocked: API Base URL not set."); return; }
-          const set = $("featureSet").value;
-          log(`Fetch switches: set=${set}`);
-          const r = await safeFetch(`${base.replace(/\/$/,"")}/api/admin/switches?set=${encodeURIComponent(set)}`, {
-            method:"GET",
-            headers: headers()
-          });
-          if(r.ok){ setBackendUI(true); log("Switches fetched (backend response loaded)."); }
-          else { setBackendUI(false); log(`Fetch switches failed (${r.status}): ${r.text.slice(0,240)}`); }
-        }
-
-        // ===== Health =====
-        async function runHealth(isPing){
-          const base = getApiBase();
-          if(!base){ setBackendUI(false); log("Blocked: API Base URL not set."); return; }
-          log(`${isPing ? "Ping" : "Health"} → ${base.replace(/\/$/,"")}/health`);
-          const r = await safeFetch(`${base.replace(/\/$/,"")}/health`, { method:"GET", headers: headers() });
-          if(r.ok){ setBackendUI(true); log("Health OK."); }
-          else { setBackendUI(false); log(`Health FAIL (${r.status}): ${r.text.slice(0,240)}`); }
-        }
-
-        // ===== Logs =====
-        async function loadLogs(){
-          const base = getApiBase();
-          if(!base){ setBackendUI(false); log("Blocked: API Base URL not set."); return; }
-          const filter = ($("logFilter").value || "all");
-          log(`Load logs: filter=${filter}`);
-          const r = await safeFetch(`${base.replace(/\/$/,"")}/api/admin/logs?filter=${encodeURIComponent(filter)}`, {
-            method:"GET", headers: headers()
-          });
-          if(r.ok){
-            setBackendUI(true);
-            const out = $("logOut");
-            if(r.json) out.textContent = JSON.stringify(r.json, null, 2);
-            else out.textContent = r.text || "No logs.";
-            log("Logs loaded into console.");
-          } else {
-            setBackendUI(false);
-            log(`Load logs failed (${r.status}): ${r.text.slice(0,240)}`);
-          }
-        }
-
-        // ===== Status snapshot refresh =====
-        function refreshMetrics(){
-          $("mApi").textContent = getApiBase() || "—";
-          $("mLast").textContent = localStorage.getItem(LS.last) || "—";
-          setBackendUI(false);
-        }
-
-        // ===== Project settings =====
-        function wireProjectSettings(view){
-          if(view === "builder"){
-            const data = safeJson(localStorage.getItem(LS.builder), { themeMode:"luxury-dark", security:"admin-only", notes:"" });
-            $("bThemeMode").value = data.themeMode || "luxury-dark";
-            $("bSecurity").value  = data.security  || "admin-only";
-            $("bNotes").value     = data.notes     || "";
-
-            $("btnSaveBuilderSettings").onclick = () => {
-              const next = {
-                themeMode: $("bThemeMode").value,
-                security: $("bSecurity").value,
-                notes: $("bNotes").value
-              };
-              localStorage.setItem(LS.builder, JSON.stringify(next));
-              log("Builder settings saved (local).");
-            };
-          }
-
-          if(view === "video"){
-            const data = safeJson(localStorage.getItem(LS.video), {
-              type:"funny", lang:"auto", len:"10-12", notify:"telegram", sheet:""
-            });
-            $("vType").value   = data.type   || "funny";
-            $("vLang").value   = data.lang   || "auto";
-            $("vLen").value    = data.len    || "10-12";
-            $("vNotify").value = data.notify || "telegram";
-            $("vSheet").value  = data.sheet  || "";
-
-            $("btnSaveVideoSettings").onclick = () => {
-              const next = {
-                type: $("vType").value,
-                lang: $("vLang").value,
-                len: $("vLen").value,
-                notify: $("vNotify").value,
-                sheet: $("vSheet").value.trim()
-              };
-              localStorage.setItem(LS.video, JSON.stringify(next));
-              log("Video settings saved (local).");
-            };
-          }
-
-          if(view === "stock"){
-            const data = safeJson(localStorage.getItem(LS.stock), {
-              market:"nasdaq", mode:"balanced", watch:"", notes:""
-            });
-            $("sMarket").value = data.market || "nasdaq";
-            $("sMode").value   = data.mode   || "balanced";
-            $("sWatch").value  = data.watch  || "";
-            $("sNotes").value  = data.notes  || "";
-
-            $("btnSaveStockSettings").onclick = () => {
-              const next = {
-                market: $("sMarket").value,
-                mode: $("sMode").value,
-                watch: $("sWatch").value.trim(),
-                notes: $("sNotes").value
-              };
-              localStorage.setItem(LS.stock, JSON.stringify(next));
-              log("Stock settings saved (local).");
-            };
-          }
-        }
-
-        function wireLogsTools(){
-          const conn = {
-            apiBase: getApiBase(),
-            adminKey: !!getAdminKey()
-          };
-          const b = safeJson(localStorage.getItem(LS.builder), null);
-          const v = safeJson(localStorage.getItem(LS.video), null);
-          const s = safeJson(localStorage.getItem(LS.stock), null);
-          const sw = state.switches;
-
-          $("lsConn").textContent = conn.apiBase ? "Saved" : "Not set";
-          $("lsB").textContent = b ? "Saved" : "Not set";
-          $("lsV").textContent = v ? "Saved" : "Not set";
-          $("lsS").textContent = s ? "Saved" : "Not set";
-          $("lsSw").textContent = sw ? "Saved" : "Not set";
-
-          $("btnLoadLogs2").onclick = () => loadLogs();
-
-          $("btnExportLocal").onclick = async () => {
-            const blob = {
-              connection: { apiBase: getApiBase(), adminKey: getAdminKey() ? "SET" : "" },
-              builder: safeJson(localStorage.getItem(LS.builder), {}),
-              video: safeJson(localStorage.getItem(LS.video), {}),
-              stock: safeJson(localStorage.getItem(LS.stock), {}),
-              switches: state.switches
-            };
-            const text = JSON.stringify(blob, null, 2);
-            try{
-              await navigator.clipboard.writeText(text);
-              log("Local settings exported to clipboard.");
-            }catch{
-              log("Export failed (clipboard permission).");
-            }
-          };
-
-          $("btnResetLocal").onclick = () => {
-            localStorage.removeItem(LS.builder);
-            localStorage.removeItem(LS.video);
-            localStorage.removeItem(LS.stock);
-            localStorage.removeItem(LS.switches);
-            localStorage.removeItem(LS.last);
-            state.switches = {
-              deepseek:false,
-              autoDisableOnErrors:false,
-              backups:false,
-              notifications:false,
-              webhookTriggers:false,
-              stripeLogs:false
-            };
-            log("Local settings reset (connection preserved).");
-            wireLogsTools();
-          };
-        }
-
-        // ===== Right-side controls =====
-        $("btnLoadLogs").onclick = () => loadLogs();
-        $("btnClearLogs").onclick = () => { $("logOut").textContent = "Logs will appear here…"; };
-        $("btnCopyLogs").onclick = async () => {
-          try{
-            await navigator.clipboard.writeText($("logOut").textContent || "");
-            log("Logs copied to clipboard.");
-          }catch{
-            log("Copy failed (clipboard permission).");
-          }
-        };
-        $("btnRefreshStatus").onclick = () => refreshMetrics();
-
-        // ===== Quick actions (sidebar) =====
-        $("qaRefresh").onclick = () => log("Refresh UI requested.");
-        $("qaHealth").onclick = () => runHealth(false);
-        $("qaSync").onclick = () => log("Sync (Sheet/DB/Config) requested (UI).");
-
-        $("qaAuto").onclick = () => {
-          const cur = (localStorage.getItem(LS.autoMode) || "off") === "on";
-          const next = !cur;
-          localStorage.setItem(LS.autoMode, next ? "on" : "off");
-          $("qaAuto").textContent = `Auto: ${next ? "ON" : "OFF"}`;
-          log(`Auto mode set to ${next ? "ON" : "OFF"} (UI only).`);
-        };
-
-        // open helpers
-        $("btnOpenAdminHtml").onclick = () => window.open("/admin.html", "_blank");
-        $("btnOpenAutomationHtml").onclick = () => window.open("/automation.html", "_blank");
-
-        // ===== Nav wiring =====
-        document.querySelectorAll(".navBtn").forEach(btn=>{
-          btn.addEventListener("click", ()=>{
-            setView(btn.getAttribute("data-view"));
-          });
-        });
-
-        // ===== Clock =====
-        function tick(){
-          $("clock").textContent = nowStr();
-        }
-        setInterval(tick, 1000);
-        tick();
-
-        // ===== Capture overview HTML once, then restore on view swap =====
-        window.__OVERVIEW_HTML = $("leftBody").innerHTML;
-
-        // ===== Initial paint =====
-        function init(){
-          // hydrate connection fields
-          $("apiBase").value = getApiBase();
-          $("adminKey").value = getAdminKey();
-
-          // paint global toggles
-          document.querySelectorAll("[data-switch]").forEach(elm=>{
-            paintSwitch(elm, !!state.switches[elm.getAttribute("data-switch")]);
-            elm.onclick = () => toggleSwitch(elm.getAttribute("data-switch"), elm);
-          });
-
-          // wire overview actions
-          wireOverview();
-
-          // right metrics
-          $("mLast").textContent = localStorage.getItem(LS.last) || "—";
-          $("mApi").textContent = getApiBase() || "—";
-          $("mView").textContent = "Command Center";
-
-          // auto button label
-          const am = (localStorage.getItem(LS.autoMode) || "off").toUpperCase();
-          $("qaAuto").textContent = `Auto: ${am}`;
-
-          // view restore
-          setBackendUI(false);
-          setView(state.view);
-
-          log("UI loaded (advanced).");
-        }
-
-        init();
-      </script>
     </main>
   </div>
+
+<script>
+/* ===========================
+   BossMind UI Runtime
+=========================== */
+const LS = {
+  apiBase: "bossmind_api_base",
+  auto: "bossmind_auto",
+  logs: "bossmind_logs"
+};
+
+const state = {
+  view: "logs",
+  apiBase: localStorage.getItem(LS.apiBase) || "",
+  auto: (localStorage.getItem(LS.auto) || "OFF"),
+  logs: JSON.parse(localStorage.getItem(LS.logs) || "[]"),
+  backendUp: null,
+  lastAction: ""
+};
+
+function inferDefaultApiBase(){
+  // If not set, default to same origin (works on video.bossmind.ai)
+  return window.location.origin;
+}
+
+function getApiBase(){
+  return (state.apiBase && state.apiBase.trim()) ? state.apiBase.trim() : inferDefaultApiBase();
+}
+
+function nowStamp(){
+  const d = new Date();
+  const pad = (n)=> String(n).padStart(2,"0");
+  const y = d.getFullYear();
+  const m = pad(d.getMonth()+1);
+  const day = pad(d.getDate());
+  let hh = d.getHours();
+  const mm = pad(d.getMinutes());
+  const ss = pad(d.getSeconds());
+  const ampm = hh >= 12 ? "PM" : "AM";
+  hh = hh % 12; if(hh===0) hh=12;
+  return `${m}/${day}/${y}, ${hh}:${mm}:${ss} ${ampm}`;
+}
+
+function log(msg){
+  const entry = `[${new Date().toISOString().replace("T"," ").replace("Z","")}] ${msg}`;
+  state.logs.unshift(entry);
+  state.logs = state.logs.slice(0, 300);
+  localStorage.setItem(LS.logs, JSON.stringify(state.logs));
+  state.lastAction = msg;
+  renderSnapshot();
+  renderLogs();
+}
+
+function setApiBase(v){
+  state.apiBase = (v || "").trim();
+  if(state.apiBase){
+    localStorage.setItem(LS.apiBase, state.apiBase);
+  }else{
+    localStorage.removeItem(LS.apiBase);
+  }
+  renderTop();
+  renderSnapshot();
+}
+
+function setAuto(){
+  state.auto = (state.auto === "ON") ? "OFF" : "ON";
+  localStorage.setItem(LS.auto, state.auto);
+  document.getElementById("btnAuto").textContent = `Auto: ${state.auto}`;
+  log(`Auto toggled ${state.auto}`);
+}
+
+function renderTop(){
+  const txtApi = document.getElementById("txtApi");
+  const dotApi = document.getElementById("dotApi");
+  const using = getApiBase();
+  const isExplicit = !!(state.apiBase && state.apiBase.trim());
+
+  txtApi.textContent = isExplicit ? `API: set` : `API: not set`;
+  dotApi.className = "dot " + (using ? "good" : "");
+}
+
+function renderBackend(){
+  const txtBackend = document.getElementById("txtBackend");
+  const dotBackend = document.getElementById("dotBackend");
+  const v = state.backendUp;
+  if(v === true){
+    txtBackend.textContent = "Backend: up";
+    dotBackend.className = "dot good";
+  }else if(v === false){
+    txtBackend.textContent = "Backend: down";
+    dotBackend.className = "dot bad";
+  }else{
+    txtBackend.textContent = "Backend: unknown";
+    dotBackend.className = "dot";
+  }
+}
+
+function titleForView(v){
+  return ({
+    command:"Command Center",
+    builder:"AI Builder",
+    video:"AI Video Generator",
+    stock:"AI Stock System",
+    chat:"AI Chat",
+    logs:"Logs & Audit",
+    settings:"System Settings"
+  })[v] || "Logs & Audit";
+}
+
+function renderSnapshot(){
+  document.getElementById("ssView").textContent = titleForView(state.view);
+  document.getElementById("ssApi").textContent = getApiBase();
+  document.getElementById("ssBackend").textContent =
+    (state.backendUp===true) ? "up" : (state.backendUp===false ? "down" : "unknown");
+  document.getElementById("ssLast").textContent = state.lastAction || "—";
+}
+
+function renderLogs(){
+  const box = document.getElementById("logbox2");
+  if(!box) return;
+  box.textContent = state.logs.length ? state.logs.join("\n") : "(no logs yet)";
+}
+
+function setView(v){
+  state.view = v;
+  document.getElementById("viewTitle").textContent = titleForView(v);
+  document.querySelectorAll(".navbtn").forEach(b=>{
+    b.classList.toggle("active", b.dataset.view === v);
+  });
+  renderPanels();
+  log(`Switched to ${titleForView(v)}`);
+}
+
+async function healthCheck(){
+  const base = getApiBase().replace(/\/+$/,"");
+  const url = base + "/health";
+  try{
+    const res = await fetch(url, { method:"GET" });
+    state.backendUp = res.ok;
+  }catch(e){
+    state.backendUp = false;
+  }
+  renderBackend();
+  renderSnapshot();
+  log(`Health check executed (${state.backendUp ? "up" : "down"})`);
+}
+
+async function ping(){
+  // Use /health as a safe ping
+  await healthCheck();
+}
+
+function sync(){
+  log("Sync triggered (placeholder)");
+  alert("Sync is placeholder. Backend wiring can be added later.");
+}
+
+function refreshUI(){
+  renderPanels();
+  renderTop();
+  renderBackend();
+  renderSnapshot();
+  log("UI refreshed");
+}
+
+function exportLocal(){
+  const payload = {
+    apiBaseExplicit: state.apiBase || null,
+    apiBaseEffective: getApiBase(),
+    auto: state.auto,
+    logsCount: state.logs.length,
+    exportedAt: new Date().toISOString()
+  };
+  const txt = JSON.stringify(payload, null, 2);
+  navigator.clipboard?.writeText(txt).catch(()=>{});
+  alert("Export copied to clipboard.");
+  log("Exported local settings (clipboard)");
+}
+
+function resetLocal(){
+  localStorage.removeItem(LS.apiBase);
+  localStorage.removeItem(LS.auto);
+  localStorage.removeItem(LS.logs);
+  state.apiBase = "";
+  state.auto = "OFF";
+  state.logs = [];
+  state.backendUp = null;
+  state.lastAction = "";
+  document.getElementById("btnAuto").textContent = "Auto: OFF";
+  renderTop();
+  renderBackend();
+  renderPanels();
+  log("Local settings reset");
+}
+
+function escapeHtml(s){
+  return String(s||"")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+/* ================
+   CHAT (REAL CALL)
+================ */
+function appendBubble(kind, text){
+  const h = document.getElementById("chatHistory");
+  if(!h) return;
+  const div = document.createElement("div");
+  div.className = "bubble " + (kind === "me" ? "me" : "ai");
+  div.textContent = text;
+  h.appendChild(div);
+  h.scrollTop = h.scrollHeight;
+}
+
+async function sendChat(){
+  const input = document.getElementById("chatInput");
+  const btn = document.getElementById("chatSend");
+  const msg = (input.value || "").trim();
+  if(!msg) return;
+
+  appendBubble("me", msg);
+  input.value = "";
+
+  const base = getApiBase().replace(/\/+$/,"");
+  const url = base + "/chat";
+
+  btn.disabled = true;
+  btn.textContent = "Sending...";
+
+  try{
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type":"application/json" },
+      body: JSON.stringify({ message: msg })
+    });
+
+    if(!res.ok){
+      appendBubble("ai", `Chat endpoint not ready. HTTP ${res.status}.`);
+      log(`Chat send failed (HTTP ${res.status})`);
+      return;
+    }
+
+    const data = await res.json().catch(()=>null);
+    const reply = (data && (data.reply || data.message || data.text)) ? (data.reply || data.message || data.text) : "(No reply field returned)";
+    appendBubble("ai", reply);
+    log("Chat message sent");
+  }catch(e){
+    appendBubble("ai", "Chat endpoint not reachable yet.");
+    log("Chat send failed (network)");
+  }finally{
+    btn.disabled = false;
+    btn.textContent = "Send";
+  }
+}
+
+/* ===========================
+   Views
+=========================== */
+function renderPanels(){
+  const left = document.getElementById("panelLeft");
+  const v = state.view;
+
+  if(v === "logs"){
+    left.innerHTML = `
+      <h3>Logs & Audit</h3>
+      <div class="muted">Operational trace and local snapshot.</div>
+      <div style="height:12px"></div>
+      <div class="panel" style="padding:14px">
+        <div class="muted2">Audit & Trace</div>
+        <div style="height:10px"></div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap">
+          <button class="btn" id="loadLogs">Load Logs</button>
+          <button class="btn" id="exportLocal">Export Local Settings</button>
+          <button class="btn danger" id="resetLocal">Reset Local Settings</button>
+        </div>
+      </div>
+
+      <div style="height:12px"></div>
+
+      <div class="panel" style="padding:14px">
+        <div class="muted2">Local Snapshot</div>
+        <div style="height:10px"></div>
+        <table class="table">
+          <thead><tr><th>Key</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr class="row"><td>Connection</td><td>${(state.apiBase && state.apiBase.trim()) ? "Set" : "Not set"}</td></tr>
+            <tr class="row"><td>Builder</td><td>Not set</td></tr>
+            <tr class="row"><td>Video</td><td>Not set</td></tr>
+            <tr class="row"><td>Stock</td><td>Not set</td></tr>
+            <tr class="row"><td>Switches</td><td>Saved</td></tr>
+          </tbody>
+        </table>
+      </div>
+    `;
+    document.getElementById("loadLogs").onclick = renderLogs;
+    document.getElementById("exportLocal").onclick = exportLocal;
+    document.getElementById("resetLocal").onclick = resetLocal;
+    return;
+  }
+
+  if(v === "settings"){
+    left.innerHTML = `
+      <h3>System Settings</h3>
+      <div class="muted">Set API base (optional). If empty, it uses the same domain automatically.</div>
+      <div style="height:12px"></div>
+
+      <div class="muted2">API Base URL</div>
+      <div style="height:8px"></div>
+      <input class="input" id="apiBaseInput" placeholder="Example: https://ai-video-maker-production.up.railway.app" value="${escapeHtml(state.apiBase)}" />
+      <div style="height:10px"></div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap">
+        <button class="btn primary" id="saveApi">Save</button>
+        <button class="btn" id="clearApi">Clear</button>
+      </div>
+
+      <div style="height:12px"></div>
+      <div class="muted2">Effective API Base:</div>
+      <div style="height:8px"></div>
+      <div class="logbox" style="min-height:auto">${escapeHtml(getApiBase())}</div>
+    `;
+
+    document.getElementById("saveApi").onclick = ()=>{
+      const v = document.getElementById("apiBaseInput").value;
+      setApiBase(v);
+      log("API Base URL saved");
+    };
+    document.getElementById("clearApi").onclick = ()=>{
+      setApiBase("");
+      const inp = document.getElementById("apiBaseInput");
+      if(inp) inp.value = "";
+      log("API Base URL cleared (auto uses same domain)");
+    };
+    return;
+  }
+
+  if(v === "chat"){
+    left.innerHTML = `
+      <h3>AI Chat</h3>
+      <div class="muted">Chat is active as a UI now. Backend endpoint: <b>POST /chat</b></div>
+      <div style="height:12px"></div>
+
+      <div class="chatWrap">
+        <div class="chatHistory" id="chatHistory"></div>
+
+        <div class="chatRow">
+          <input class="input" id="chatInput" placeholder="Type message..." />
+          <button class="btn primary" id="chatSend">Send</button>
+        </div>
+
+        <div class="muted2">
+          API Base used: <b>${escapeHtml(getApiBase())}</b>
+        </div>
+      </div>
+    `;
+
+    // Seed greeting
+    appendBubble("ai", "BossMind Chat UI is ready. If /chat is not implemented yet, you will see a safe message.");
+    document.getElementById("chatSend").onclick = sendChat;
+    document.getElementById("chatInput").addEventListener("keydown", (e)=>{
+      if(e.key === "Enter") sendChat();
+    });
+    return;
+  }
+
+  // Other views (minimal placeholders)
+  left.innerHTML = `
+    <h3>${titleForView(v)}</h3>
+    <div class="muted">Panel is ready. Backend wiring can be added later.</div>
+  `;
+}
+
+/* ===========================
+   Init / Wire buttons
+=========================== */
+function tickClock(){
+  document.getElementById("clock").textContent = nowStamp();
+}
+
+document.getElementById("btnAuto").addEventListener("click", setAuto);
+document.getElementById("btnHealth").addEventListener("click", healthCheck);
+document.getElementById("btnSync").addEventListener("click", sync);
+document.getElementById("btnRefreshUI").addEventListener("click", refreshUI);
+document.getElementById("btnMiniRefresh").addEventListener("click", refreshUI);
+
+document.getElementById("btnPing").addEventListener("click", ping);
+document.getElementById("loadLogs2").addEventListener("click", renderLogs);
+document.getElementById("clearLogs").addEventListener("click", ()=>{
+  state.logs = [];
+  localStorage.setItem(LS.logs, JSON.stringify(state.logs));
+  renderLogs();
+  log("Logs cleared");
+});
+document.getElementById("copyLogs").addEventListener("click", ()=>{
+  const txt = state.logs.join("\n");
+  navigator.clipboard?.writeText(txt).catch(()=>{});
+  alert("Logs copied to clipboard.");
+  log("Logs copied");
+});
+
+document.querySelectorAll(".navbtn").forEach(b=>{
+  b.addEventListener("click", ()=> setView(b.dataset.view));
+});
+
+(function init(){
+  document.getElementById("btnAuto").textContent = `Auto: ${state.auto}`;
+  tickClock();
+  setInterval(tickClock, 1000);
+
+  renderTop();
+  renderBackend();
+  renderSnapshot();
+  renderPanels();
+
+  log("UI loaded (advanced).");
+})();
+</script>
 </body>
 </html>
