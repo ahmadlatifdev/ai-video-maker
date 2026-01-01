@@ -271,6 +271,16 @@
     }
     .chatRow{ display:flex; gap:10px; align-items:center; }
     .smallbtn{ padding:9px 10px; border-radius:12px; font-size:12px; font-weight:900; }
+
+    /* Mini rows */
+    .kv{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    @media (max-width: 980px){
+      .kv{ grid-template-columns:1fr; }
+    }
   </style>
 </head>
 
@@ -438,7 +448,8 @@
 const LS = {
   apiBase: "bossmind_api_base",
   auto: "bossmind_auto",
-  logs: "bossmind_logs"
+  logs: "bossmind_logs",
+  videoLanguage: "bossmind_video_language"
 };
 
 const state = {
@@ -447,8 +458,19 @@ const state = {
   auto: (localStorage.getItem(LS.auto) || "OFF"),
   logs: JSON.parse(localStorage.getItem(LS.logs) || "[]"),
   backendUp: null,
-  lastAction: ""
+  lastAction: "",
+  video: {
+    // language codes: en, fr, ar
+    language: localStorage.getItem(LS.videoLanguage) || "en",
+    lastJob: null
+  }
 };
+
+const LANG_OPTIONS = [
+  { code: "en", label: "English" },
+  { code: "fr", label: "French" },
+  { code: "ar", label: "Arabic" }
+];
 
 function inferDefaultApiBase(){
   // If not set, default to same origin (works on video.bossmind.ai)
@@ -499,6 +521,21 @@ function setAuto(){
   localStorage.setItem(LS.auto, state.auto);
   document.getElementById("btnAuto").textContent = `Auto: ${state.auto}`;
   log(`Auto toggled ${state.auto}`);
+}
+
+function setVideoLanguage(code){
+  const allowed = new Set(LANG_OPTIONS.map(x=>x.code));
+  const safe = allowed.has(code) ? code : "en";
+  state.video.language = safe;
+  localStorage.setItem(LS.videoLanguage, safe);
+  const sel = document.getElementById("videoLang");
+  if(sel) sel.value = safe;
+  log(`Video language set to ${safe}`);
+}
+
+function getLanguageLabel(code){
+  const it = LANG_OPTIONS.find(x=>x.code === code);
+  return it ? it.label : code;
 }
 
 function renderTop(){
@@ -582,6 +619,44 @@ async function ping(){
   await healthCheck();
 }
 
+async function postJson(path, payload){
+  const base = getApiBase().replace(/\/+$/,"");
+  const url = base + path;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type":"application/json" },
+    body: JSON.stringify(payload || {})
+  });
+  if(!res.ok){
+    const t = await res.text().catch(()=> "");
+    throw new Error(`HTTP ${res.status}: ${t || "Request failed"}`);
+  }
+  return await res.json().catch(()=> ({}));
+}
+
+async function triggerRenderTest(){
+  // Uses your minimal backend endpoint: POST /api/video/render
+  const payload = {
+    title: "Dashboard Test Video",
+    language: state.video.language,
+    duration_minutes: 10
+  };
+  try{
+    log(`Render requested (lang=${state.video.language})`);
+    const data = await postJson("/api/video/render", payload);
+    state.video.lastJob = data || null;
+    const preview = (data && data.preview_url) ? data.preview_url : "";
+    const id = (data && data.id) ? data.id : "";
+    const status = (data && data.status) ? data.status : "";
+    renderPanels(); // refresh video panel to show result
+    log(`Render queued ${id ? `(id=${id})` : ""} ${status ? `(status=${status})` : ""}`);
+    if(preview) log(`Preview URL: ${preview}`);
+  }catch(e){
+    alert(`Render failed: ${e.message}`);
+    log(`Render failed: ${e.message}`);
+  }
+}
+
 function sync(){
   log("Sync triggered (placeholder)");
   alert("Sync is placeholder. Backend wiring can be added later.");
@@ -600,6 +675,7 @@ function exportLocal(){
     apiBaseExplicit: state.apiBase || null,
     apiBaseEffective: getApiBase(),
     auto: state.auto,
+    videoLanguage: state.video.language,
     logsCount: state.logs.length,
     exportedAt: new Date().toISOString()
   };
@@ -613,11 +689,14 @@ function resetLocal(){
   localStorage.removeItem(LS.apiBase);
   localStorage.removeItem(LS.auto);
   localStorage.removeItem(LS.logs);
+  localStorage.removeItem(LS.videoLanguage);
   state.apiBase = "";
   state.auto = "OFF";
   state.logs = [];
   state.backendUp = null;
   state.lastAction = "";
+  state.video.language = "en";
+  state.video.lastJob = null;
   document.getElementById("btnAuto").textContent = "Auto: OFF";
   renderTop();
   renderBackend();
@@ -720,7 +799,7 @@ function renderPanels(){
           <tbody>
             <tr class="row"><td>Connection</td><td>${(state.apiBase && state.apiBase.trim()) ? "Set" : "Not set"}</td></tr>
             <tr class="row"><td>Builder</td><td>Not set</td></tr>
-            <tr class="row"><td>Video</td><td>Not set</td></tr>
+            <tr class="row"><td>Video</td><td>Language: ${escapeHtml(getLanguageLabel(state.video.language))}</td></tr>
             <tr class="row"><td>Stock</td><td>Not set</td></tr>
             <tr class="row"><td>Switches</td><td>Saved</td></tr>
           </tbody>
@@ -795,6 +874,66 @@ function renderPanels(){
     document.getElementById("chatInput").addEventListener("keydown", (e)=>{
       if(e.key === "Enter") sendChat();
     });
+    return;
+  }
+
+  if(v === "video"){
+    const last = state.video.lastJob || null;
+    const id = last && last.id ? String(last.id) : "";
+    const status = last && last.status ? String(last.status) : "";
+    const preview = last && last.preview_url ? String(last.preview_url) : "";
+
+    left.innerHTML = `
+      <h3>AI Video Generator</h3>
+      <div class="muted">Language selection is active. Render test calls <b>POST /api/video/render</b>.</div>
+      <div style="height:12px"></div>
+
+      <div class="panel" style="padding:14px">
+        <div class="muted2">Video Language</div>
+        <div style="height:8px"></div>
+
+        <div class="kv">
+          <div>
+            <select class="input" id="videoLang" style="padding:10px">
+              ${LANG_OPTIONS.map(o => `<option value="${o.code}">${o.label}</option>`).join("")}
+            </select>
+            <div style="height:8px"></div>
+            <div class="muted2">Selected: <b>${escapeHtml(getLanguageLabel(state.video.language))}</b></div>
+          </div>
+
+          <div>
+            <button class="btn good" id="btnRenderTest">▶ Render Test (10 min)</button>
+            <div style="height:8px"></div>
+            <div class="muted2">Sends: <b>{ language: "${escapeHtml(state.video.language)}" }</b></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="height:12px"></div>
+
+      <div class="panel" style="padding:14px">
+        <div class="muted2">Last Render Result</div>
+        <div style="height:10px"></div>
+
+        <table class="table">
+          <thead><tr><th>Field</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr class="row"><td>id</td><td>${escapeHtml(id || "—")}</td></tr>
+            <tr class="row"><td>status</td><td>${escapeHtml(status || "—")}</td></tr>
+            <tr class="row"><td>preview_url</td><td>${preview ? `<a href="${escapeHtml(preview)}" target="_blank" rel="noreferrer" style="color:rgba(216,203,255,.95); font-weight:900">Open Preview</a>` : "—"}</td></tr>
+          </tbody>
+        </table>
+
+        <div style="height:10px"></div>
+        <div class="muted2">Tip: Preview opens in a new tab.</div>
+      </div>
+    `;
+
+    const sel = document.getElementById("videoLang");
+    sel.value = state.video.language;
+    sel.addEventListener("change", (e)=> setVideoLanguage(e.target.value));
+
+    document.getElementById("btnRenderTest").onclick = triggerRenderTest;
     return;
   }
 
