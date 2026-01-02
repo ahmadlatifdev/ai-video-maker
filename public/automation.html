@@ -272,14 +272,14 @@
     .chatRow{ display:flex; gap:10px; align-items:center; }
     .smallbtn{ padding:9px 10px; border-radius:12px; font-size:12px; font-weight:900; }
 
-    /* Mini rows */
-    .kv{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:10px;
-    }
-    @media (max-width: 980px){
-      .kv{ grid-template-columns:1fr; }
+    .tag{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:6px 10px; border-radius:999px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.02);
+      color: var(--muted);
+      font-size:11px;
+      white-space:nowrap;
     }
   </style>
 </head>
@@ -288,7 +288,7 @@
   <div class="app">
     <aside class="sidebar card">
       <div class="brand">
-        <div class="logo"></div>
+        <div class="logo" title="BossMind"></div>
         <div>
           <h1>BossMind Admin</h1>
           <p class="muted">Automation • Switches • Jobs • Queue</p>
@@ -334,7 +334,6 @@
           <span class="badge p3">Project 3</span>
         </button>
 
-        <!-- ✅ NEW CHAT BUTTON -->
         <button class="navbtn" data-view="chat">
           <div class="navleft">
             <div class="navtitle">AI Chat</div>
@@ -375,7 +374,7 @@
 
     <main class="main card">
       <div class="topbar">
-        <h2 id="viewTitle">Logs & Audit</h2>
+        <h2 id="viewTitle">Command Center</h2>
         <div class="right">
           <span class="chip"><span class="dot" id="dotApi"></span><span id="txtApi">API: not set</span></span>
           <button class="btn smallbtn" onclick="location.href='/admin.html'">Open admin.html</button>
@@ -449,31 +448,25 @@ const LS = {
   apiBase: "bossmind_api_base",
   auto: "bossmind_auto",
   logs: "bossmind_logs",
-  videoLanguage: "bossmind_video_language"
+  sheetUrl: "bossmind_sheet_url",
+  queueCache: "bossmind_queue_cache",
+  lang: "bossmind_default_lang"
 };
 
 const state = {
-  view: "logs",
+  view: "command",
   apiBase: localStorage.getItem(LS.apiBase) || "",
   auto: (localStorage.getItem(LS.auto) || "OFF"),
   logs: JSON.parse(localStorage.getItem(LS.logs) || "[]"),
   backendUp: null,
   lastAction: "",
-  video: {
-    // language codes: en, fr, ar
-    language: localStorage.getItem(LS.videoLanguage) || "en",
-    lastJob: null
-  }
+  sheetUrl: localStorage.getItem(LS.sheetUrl) || "",
+  queue: JSON.parse(localStorage.getItem(LS.queueCache) || "[]"),
+  selectedRowIndex: null,
+  defaultLang: localStorage.getItem(LS.lang) || "auto"
 };
 
-const LANG_OPTIONS = [
-  { code: "en", label: "English" },
-  { code: "fr", label: "French" },
-  { code: "ar", label: "Arabic" }
-];
-
 function inferDefaultApiBase(){
-  // If not set, default to same origin (works on video.bossmind.ai)
   return window.location.origin;
 }
 
@@ -523,21 +516,6 @@ function setAuto(){
   log(`Auto toggled ${state.auto}`);
 }
 
-function setVideoLanguage(code){
-  const allowed = new Set(LANG_OPTIONS.map(x=>x.code));
-  const safe = allowed.has(code) ? code : "en";
-  state.video.language = safe;
-  localStorage.setItem(LS.videoLanguage, safe);
-  const sel = document.getElementById("videoLang");
-  if(sel) sel.value = safe;
-  log(`Video language set to ${safe}`);
-}
-
-function getLanguageLabel(code){
-  const it = LANG_OPTIONS.find(x=>x.code === code);
-  return it ? it.label : code;
-}
-
 function renderTop(){
   const txtApi = document.getElementById("txtApi");
   const dotApi = document.getElementById("dotApi");
@@ -573,7 +551,7 @@ function titleForView(v){
     chat:"AI Chat",
     logs:"Logs & Audit",
     settings:"System Settings"
-  })[v] || "Logs & Audit";
+  })[v] || "Command Center";
 }
 
 function renderSnapshot(){
@@ -615,51 +593,12 @@ async function healthCheck(){
 }
 
 async function ping(){
-  // Use /health as a safe ping
   await healthCheck();
 }
 
-async function postJson(path, payload){
-  const base = getApiBase().replace(/\/+$/,"");
-  const url = base + path;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type":"application/json" },
-    body: JSON.stringify(payload || {})
-  });
-  if(!res.ok){
-    const t = await res.text().catch(()=> "");
-    throw new Error(`HTTP ${res.status}: ${t || "Request failed"}`);
-  }
-  return await res.json().catch(()=> ({}));
-}
-
-async function triggerRenderTest(){
-  // Uses your minimal backend endpoint: POST /api/video/render
-  const payload = {
-    title: "Dashboard Test Video",
-    language: state.video.language,
-    duration_minutes: 10
-  };
-  try{
-    log(`Render requested (lang=${state.video.language})`);
-    const data = await postJson("/api/video/render", payload);
-    state.video.lastJob = data || null;
-    const preview = (data && data.preview_url) ? data.preview_url : "";
-    const id = (data && data.id) ? data.id : "";
-    const status = (data && data.status) ? data.status : "";
-    renderPanels(); // refresh video panel to show result
-    log(`Render queued ${id ? `(id=${id})` : ""} ${status ? `(status=${status})` : ""}`);
-    if(preview) log(`Preview URL: ${preview}`);
-  }catch(e){
-    alert(`Render failed: ${e.message}`);
-    log(`Render failed: ${e.message}`);
-  }
-}
-
 function sync(){
-  log("Sync triggered (placeholder)");
-  alert("Sync is placeholder. Backend wiring can be added later.");
+  log("Sync triggered (Sheet/DB/Config)");
+  alert("Sync is now focused on Sheet Queue. Use 'Queue from Google Sheet' inside AI Video Generator.");
 }
 
 function refreshUI(){
@@ -675,8 +614,9 @@ function exportLocal(){
     apiBaseExplicit: state.apiBase || null,
     apiBaseEffective: getApiBase(),
     auto: state.auto,
-    videoLanguage: state.video.language,
-    logsCount: state.logs.length,
+    sheetUrl: state.sheetUrl || null,
+    queueCount: state.queue.length,
+    defaultLang: state.defaultLang,
     exportedAt: new Date().toISOString()
   };
   const txt = JSON.stringify(payload, null, 2);
@@ -689,14 +629,20 @@ function resetLocal(){
   localStorage.removeItem(LS.apiBase);
   localStorage.removeItem(LS.auto);
   localStorage.removeItem(LS.logs);
-  localStorage.removeItem(LS.videoLanguage);
+  localStorage.removeItem(LS.sheetUrl);
+  localStorage.removeItem(LS.queueCache);
+  localStorage.removeItem(LS.lang);
+
   state.apiBase = "";
   state.auto = "OFF";
   state.logs = [];
   state.backendUp = null;
   state.lastAction = "";
-  state.video.language = "en";
-  state.video.lastJob = null;
+  state.sheetUrl = "";
+  state.queue = [];
+  state.selectedRowIndex = null;
+  state.defaultLang = "auto";
+
   document.getElementById("btnAuto").textContent = "Auto: OFF";
   renderTop();
   renderBackend();
@@ -711,6 +657,210 @@ function escapeHtml(s){
     .replaceAll(">","&gt;")
     .replaceAll('"',"&quot;")
     .replaceAll("'","&#039;");
+}
+
+/* ===========================
+   Video Queue (Sheet)
+=========================== */
+function setSheetUrl(v){
+  state.sheetUrl = (v || "").trim();
+  if(state.sheetUrl) localStorage.setItem(LS.sheetUrl, state.sheetUrl);
+  else localStorage.removeItem(LS.sheetUrl);
+}
+
+function setDefaultLang(v){
+  state.defaultLang = v;
+  localStorage.setItem(LS.lang, v);
+}
+
+function cacheQueue(items){
+  state.queue = Array.isArray(items) ? items : [];
+  localStorage.setItem(LS.queueCache, JSON.stringify(state.queue));
+}
+
+function renderQueueTable(){
+  const host = document.getElementById("queueTableHost");
+  if(!host) return;
+
+  if(!state.queue.length){
+    host.innerHTML = `<div class="muted2">(No queue loaded yet)</div>`;
+    return;
+  }
+
+  const rows = state.queue.slice(0, 50).map((it, i)=>{
+    const active = (state.selectedRowIndex === i) ? `style="outline:1px solid rgba(139,92,246,.35); background:rgba(139,92,246,.08)"` : "";
+    const lang = escapeHtml(it.language || "auto");
+    const status = escapeHtml(it.status || "");
+    const title = escapeHtml(it.title || `Row ${it.row_index || "?"}`);
+    const rownum = escapeHtml(it.row_index || "");
+    return `
+      <tr class="row" ${active}>
+        <td>${rownum}</td>
+        <td>${title}</td>
+        <td><span class="tag">${lang}</span></td>
+        <td><span class="tag">${status || "—"}</span></td>
+        <td>
+          <button class="btn smallbtn" data-pick="${i}">Pick</button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  host.innerHTML = `
+    <table class="table">
+      <thead><tr><th>Row</th><th>Title</th><th>Lang</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div class="muted2">Showing up to 50 rows (latest loaded).</div>
+  `;
+
+  host.querySelectorAll("button[data-pick]").forEach(btn=>{
+    btn.onclick = ()=>{
+      const idx = Number(btn.dataset.pick);
+      state.selectedRowIndex = idx;
+      log(`Selected queue row #${state.queue[idx]?.row_index || "?"}: ${state.queue[idx]?.title || "—"}`);
+      renderQueueTable();
+      renderSelectedRowPreview();
+    };
+  });
+}
+
+function renderSelectedRowPreview(){
+  const host = document.getElementById("selectedRowHost");
+  if(!host) return;
+
+  if(state.selectedRowIndex == null || !state.queue[state.selectedRowIndex]){
+    host.innerHTML = `<div class="muted2">(No row selected)</div>`;
+    return;
+  }
+
+  const it = state.queue[state.selectedRowIndex];
+  const title = escapeHtml(it.title || "");
+  const lang = escapeHtml(it.language || "auto");
+  const dur = escapeHtml(it.duration_minutes || "");
+  const url = escapeHtml(it.video_url || "");
+
+  host.innerHTML = `
+    <div class="panel" style="padding:14px">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap">
+        <div>
+          <div style="font-weight:900; font-size:13px">Selected</div>
+          <div class="muted2">Row ${escapeHtml(it.row_index || "")}</div>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap">
+          <span class="tag">Lang: <b>${lang}</b></span>
+          <span class="tag">Min: <b>${dur || "—"}</b></span>
+        </div>
+      </div>
+      <div style="height:10px"></div>
+      <div style="font-weight:900">${title}</div>
+      <div style="height:10px"></div>
+      <div class="muted2">Video URL (if your sheet provides it):</div>
+      <div style="height:8px"></div>
+      <div class="logbox" style="min-height:auto">${url ? url : "(none)"}</div>
+    </div>
+  `;
+}
+
+async function loadQueueFromSheet(){
+  const base = getApiBase().replace(/\/+$/,"");
+  const url = base + "/api/sheet/queue?sheetUrl=" + encodeURIComponent(state.sheetUrl);
+
+  if(!state.sheetUrl){
+    alert("Paste your Google Sheet URL first.");
+    return;
+  }
+
+  log("Loading queue from Google Sheet...");
+  try{
+    const res = await fetch(url, { method:"GET" });
+    const data = await res.json().catch(()=>null);
+
+    if(!res.ok || !data || !data.ok){
+      const msg = data?.error || `Failed. HTTP ${res.status}`;
+      alert(msg);
+      log(`Queue load failed: ${msg}`);
+      return;
+    }
+
+    cacheQueue(data.items || []);
+    state.selectedRowIndex = null;
+
+    log(`Queue loaded: ${data.count} rows`);
+    renderQueueTable();
+    renderSelectedRowPreview();
+
+  }catch(e){
+    alert("Queue load failed (network).");
+    log("Queue load failed (network)");
+  }
+}
+
+async function renderNextFromQueue(){
+  // Uses selected row if any; otherwise first row
+  const it = (state.selectedRowIndex != null && state.queue[state.selectedRowIndex])
+    ? state.queue[state.selectedRowIndex]
+    : state.queue[0];
+
+  if(!it){
+    alert("Queue is empty. Load from Google Sheet first.");
+    return;
+  }
+
+  const payload = {
+    title: it.title || "Untitled",
+    language: (it.language && it.language !== "auto") ? it.language : state.defaultLang,
+    duration_minutes: it.duration_minutes || null,
+    source: "google_sheet",
+    preview_url: it.video_url || ""
+  };
+
+  const base = getApiBase().replace(/\/+$/,"");
+  const url = base + "/api/video/render";
+
+  log(`Render requested: ${payload.title}`);
+  try{
+    const res = await fetch(url, {
+      method:"POST",
+      headers: { "Content-Type":"application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json().catch(()=>null);
+
+    if(!res.ok || !data || !data.ok){
+      const msg = data?.error || `Render failed. HTTP ${res.status}`;
+      alert(msg);
+      log(`Render failed: ${msg}`);
+      return;
+    }
+
+    const preview = data.preview_url || "";
+    log(`Job queued: ${data.id}${preview ? " (has preview_url)" : ""}`);
+
+    if(preview){
+      // show link
+      const host = document.getElementById("videoPreviewHost");
+      if(host){
+        host.innerHTML = `
+          <div class="panel" style="padding:14px">
+            <div style="font-weight:900">Preview URL</div>
+            <div class="muted2">This is the link coming from your sheet (if provided).</div>
+            <div style="height:10px"></div>
+            <div class="logbox" style="min-height:auto">${escapeHtml(preview)}</div>
+            <div style="height:10px"></div>
+            <button class="btn good" id="openPreview">Open Preview</button>
+          </div>
+        `;
+        document.getElementById("openPreview").onclick = ()=> window.open(preview, "_blank");
+      }
+    } else {
+      alert("Queued. No preview_url found in the sheet row.");
+    }
+
+  }catch(e){
+    alert("Render failed (network).");
+    log("Render failed (network)");
+  }
 }
 
 /* ================
@@ -774,6 +924,122 @@ function renderPanels(){
   const left = document.getElementById("panelLeft");
   const v = state.view;
 
+  if(v === "command"){
+    left.innerHTML = `
+      <h3>Command Center</h3>
+      <div class="muted">Quick overview and safest actions.</div>
+      <div style="height:12px"></div>
+
+      <div class="panel" style="padding:14px">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap">
+          <div>
+            <div style="font-weight:900">Koki & Dodi</div>
+            <div class="muted2">Brand assets will appear after we add logo + characters next.</div>
+          </div>
+          <span class="tag">Phase A: Sheet → Queue ✅</span>
+        </div>
+        <div style="height:10px"></div>
+        <div class="muted2">Next after A: add logo + character selector + language buttons + voice engine wiring.</div>
+      </div>
+    `;
+    return;
+  }
+
+  if(v === "video"){
+    left.innerHTML = `
+      <h3>AI Video Generator</h3>
+      <div class="muted">This view now loads your Google Sheet rows and uses them for Render Next.</div>
+      <div style="height:12px"></div>
+
+      <div class="panel" style="padding:14px">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap">
+          <div style="font-weight:900">Production Pipeline</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap">
+            <button class="btn good smallbtn" id="btnLoadQueue">Queue from Google Sheet</button>
+            <button class="btn warn smallbtn" id="btnRenderNext">Render Next</button>
+          </div>
+        </div>
+
+        <div style="height:12px"></div>
+
+        <div class="muted2">Google Sheet URL (Queue)</div>
+        <div style="height:8px"></div>
+        <input class="input" id="sheetUrlInput" placeholder="Paste your Google Sheet URL هنا..." value="${escapeHtml(state.sheetUrl)}" />
+        <div style="height:10px"></div>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+          <div style="min-width:220px; flex:1">
+            <div class="muted2">Language options</div>
+            <div style="height:8px"></div>
+            <select class="input" id="langSelect" style="padding:12px">
+              <option value="auto">Auto (viewer IP)</option>
+              <option value="English">English</option>
+              <option value="French">French</option>
+              <option value="Arabic">Arabic</option>
+            </select>
+          </div>
+          <div style="min-width:220px; flex:1">
+            <div class="muted2">Notes</div>
+            <div style="height:8px"></div>
+            <div class="logbox" style="min-height:auto">
+If your sheet is private, queue load will fail.
+Fix: set sharing to "Anyone with the link (Viewer)" OR publish the sheet tab.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="height:12px"></div>
+
+      <div class="panel" style="padding:14px">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap">
+          <div style="font-weight:900">Queue (from Sheet)</div>
+          <span class="tag">Loaded: <b>${state.queue.length}</b></span>
+        </div>
+        <div style="height:10px"></div>
+        <div id="queueTableHost"></div>
+      </div>
+
+      <div style="height:12px"></div>
+
+      <div id="selectedRowHost"></div>
+
+      <div style="height:12px"></div>
+
+      <div id="videoPreviewHost"></div>
+    `;
+
+    // wire
+    const langSelect = document.getElementById("langSelect");
+    if(langSelect){
+      langSelect.value = state.defaultLang || "auto";
+      langSelect.onchange = ()=> {
+        setDefaultLang(langSelect.value);
+        log(`Default language set to: ${langSelect.value}`);
+      };
+    }
+
+    const sheetInput = document.getElementById("sheetUrlInput");
+    if(sheetInput){
+      sheetInput.onchange = ()=> setSheetUrl(sheetInput.value);
+      sheetInput.onblur = ()=> setSheetUrl(sheetInput.value);
+    }
+
+    document.getElementById("btnLoadQueue").onclick = async ()=>{
+      setSheetUrl(document.getElementById("sheetUrlInput").value);
+      await loadQueueFromSheet();
+    };
+
+    document.getElementById("btnRenderNext").onclick = async ()=>{
+      await renderNextFromQueue();
+    };
+
+    renderQueueTable();
+    renderSelectedRowPreview();
+
+    return;
+  }
+
   if(v === "logs"){
     left.innerHTML = `
       <h3>Logs & Audit</h3>
@@ -797,10 +1063,9 @@ function renderPanels(){
         <table class="table">
           <thead><tr><th>Key</th><th>Value</th></tr></thead>
           <tbody>
-            <tr class="row"><td>Connection</td><td>${(state.apiBase && state.apiBase.trim()) ? "Set" : "Not set"}</td></tr>
-            <tr class="row"><td>Builder</td><td>Not set</td></tr>
-            <tr class="row"><td>Video</td><td>Language: ${escapeHtml(getLanguageLabel(state.video.language))}</td></tr>
-            <tr class="row"><td>Stock</td><td>Not set</td></tr>
+            <tr class="row"><td>Connection (API Base)</td><td>${(state.apiBase && state.apiBase.trim()) ? "Set" : "Not set"}</td></tr>
+            <tr class="row"><td>Google Sheet URL</td><td>${state.sheetUrl ? "Set" : "Not set"}</td></tr>
+            <tr class="row"><td>Queue Cache</td><td>${state.queue.length} rows</td></tr>
             <tr class="row"><td>Switches</td><td>Saved</td></tr>
           </tbody>
         </table>
@@ -820,7 +1085,7 @@ function renderPanels(){
 
       <div class="muted2">API Base URL</div>
       <div style="height:8px"></div>
-      <input class="input" id="apiBaseInput" placeholder="Example: https://ai-video-maker-production.up.railway.app" value="${escapeHtml(state.apiBase)}" />
+      <input class="input" id="apiBaseInput" placeholder="Example: https://your-railway-service.up.railway.app" value="${escapeHtml(state.apiBase)}" />
       <div style="height:10px"></div>
 
       <div style="display:flex; gap:10px; flex-wrap:wrap">
@@ -832,6 +1097,16 @@ function renderPanels(){
       <div class="muted2">Effective API Base:</div>
       <div style="height:8px"></div>
       <div class="logbox" style="min-height:auto">${escapeHtml(getApiBase())}</div>
+
+      <div style="height:12px"></div>
+      <div class="panel" style="padding:14px">
+        <div style="font-weight:900">Connections</div>
+        <div class="muted2">Google Sheet (Queue)</div>
+        <div style="height:8px"></div>
+        <input class="input" id="sheetUrlSettings" placeholder="Paste Google Sheet URL..." value="${escapeHtml(state.sheetUrl)}" />
+        <div style="height:10px"></div>
+        <button class="btn good" id="saveSheet">Save Sheet URL</button>
+      </div>
     `;
 
     document.getElementById("saveApi").onclick = ()=>{
@@ -845,13 +1120,20 @@ function renderPanels(){
       if(inp) inp.value = "";
       log("API Base URL cleared (auto uses same domain)");
     };
+
+    document.getElementById("saveSheet").onclick = ()=>{
+      const v = document.getElementById("sheetUrlSettings").value;
+      setSheetUrl(v);
+      log("Google Sheet URL saved");
+      alert("Saved. Now go to AI Video Generator and click: Queue from Google Sheet.");
+    };
     return;
   }
 
   if(v === "chat"){
     left.innerHTML = `
       <h3>AI Chat</h3>
-      <div class="muted">Chat is active as a UI now. Backend endpoint: <b>POST /chat</b></div>
+      <div class="muted">Chat UI is ready. Backend endpoint: <b>POST /chat</b></div>
       <div style="height:12px"></div>
 
       <div class="chatWrap">
@@ -868,72 +1150,11 @@ function renderPanels(){
       </div>
     `;
 
-    // Seed greeting
     appendBubble("ai", "BossMind Chat UI is ready. If /chat is not implemented yet, you will see a safe message.");
     document.getElementById("chatSend").onclick = sendChat;
     document.getElementById("chatInput").addEventListener("keydown", (e)=>{
       if(e.key === "Enter") sendChat();
     });
-    return;
-  }
-
-  if(v === "video"){
-    const last = state.video.lastJob || null;
-    const id = last && last.id ? String(last.id) : "";
-    const status = last && last.status ? String(last.status) : "";
-    const preview = last && last.preview_url ? String(last.preview_url) : "";
-
-    left.innerHTML = `
-      <h3>AI Video Generator</h3>
-      <div class="muted">Language selection is active. Render test calls <b>POST /api/video/render</b>.</div>
-      <div style="height:12px"></div>
-
-      <div class="panel" style="padding:14px">
-        <div class="muted2">Video Language</div>
-        <div style="height:8px"></div>
-
-        <div class="kv">
-          <div>
-            <select class="input" id="videoLang" style="padding:10px">
-              ${LANG_OPTIONS.map(o => `<option value="${o.code}">${o.label}</option>`).join("")}
-            </select>
-            <div style="height:8px"></div>
-            <div class="muted2">Selected: <b>${escapeHtml(getLanguageLabel(state.video.language))}</b></div>
-          </div>
-
-          <div>
-            <button class="btn good" id="btnRenderTest">▶ Render Test (10 min)</button>
-            <div style="height:8px"></div>
-            <div class="muted2">Sends: <b>{ language: "${escapeHtml(state.video.language)}" }</b></div>
-          </div>
-        </div>
-      </div>
-
-      <div style="height:12px"></div>
-
-      <div class="panel" style="padding:14px">
-        <div class="muted2">Last Render Result</div>
-        <div style="height:10px"></div>
-
-        <table class="table">
-          <thead><tr><th>Field</th><th>Value</th></tr></thead>
-          <tbody>
-            <tr class="row"><td>id</td><td>${escapeHtml(id || "—")}</td></tr>
-            <tr class="row"><td>status</td><td>${escapeHtml(status || "—")}</td></tr>
-            <tr class="row"><td>preview_url</td><td>${preview ? `<a href="${escapeHtml(preview)}" target="_blank" rel="noreferrer" style="color:rgba(216,203,255,.95); font-weight:900">Open Preview</a>` : "—"}</td></tr>
-          </tbody>
-        </table>
-
-        <div style="height:10px"></div>
-        <div class="muted2">Tip: Preview opens in a new tab.</div>
-      </div>
-    `;
-
-    const sel = document.getElementById("videoLang");
-    sel.value = state.video.language;
-    sel.addEventListener("change", (e)=> setVideoLanguage(e.target.value));
-
-    document.getElementById("btnRenderTest").onclick = triggerRenderTest;
     return;
   }
 
@@ -986,7 +1207,10 @@ document.querySelectorAll(".navbtn").forEach(b=>{
   renderSnapshot();
   renderPanels();
 
-  log("UI loaded (advanced).");
+  // initial health check
+  healthCheck().catch(()=>{});
+
+  log("UI loaded (queue-enabled).");
 })();
 </script>
 </body>
