@@ -1,201 +1,234 @@
 /**
- * BossMind AI Video Generator – Backend
- * Phase: Google Sheet Queue + Language → Voice → OpenAI TTS
- *
- * CommonJS build (Railway-safe without "type":"module")
- *
- * FIX: Use GOOGLE_SHEETS_PUBLISHED_URL (pubhtml) because GViz can return 410.
+ * BossMind AI Video Maker — server.js
+ * Fetches Google Sheets (Published or normal) as CSV, parses rows, returns JSON at /queue
  */
 
-const express = require("express");
-const cors = require("cors");
-const helmet = require("helmet");
-const morgan = require("morgan");
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
 
-// OpenAI SDK (supports CJS, but handle both default/non-default exports safely)
-const OpenAIImport = require("openai");
-const OpenAI = OpenAIImport.default || OpenAIImport;
+dotenv.config();
 
-/* =======================
-   ENV VALIDATION
-======================= */
-function mustEnv(name) {
-  const v = process.env[name];
-  if (!v) throw new Error(`Missing required ENV: ${name}`);
-  return v;
-}
+const app = express();
+app.use(cors());
+app.use(express.json({ limit: "1mb" }));
 
 const PORT = process.env.PORT || 8080;
 
-// New (preferred) source: Published-to-web URL (pubhtml)
-const GOOGLE_SHEETS_PUBLISHED_URL = mustEnv("GOOGLE_SHEETS_PUBLISHED_URL");
+// REQUIRED
+const SHEET_URL = process.env.GOOGLE_SHEETS_PUBLISHED_URL;
 
-// Still keep these for logging / future switch-back
-const GOOGLE_SHEETS_SPREADSHEET_ID = process.env.GOOGLE_SHEETS_SPREADSHEET_ID || "";
-const GOOGLE_SHEETS_SHEET_NAME = process.env.GOOGLE_SHEETS_SHEET_NAME || "";
+// ---------- Helpers ----------
 
-const OPENAI_API_KEY = mustEnv("OPENAI_API_KEY");
-
-/* =======================
-   APP SETUP
-======================= */
-const app = express();
-app.use(cors());
-app.use(helmet());
-app.use(express.json({ limit: "2mb" }));
-app.use(morgan("dev"));
-
-const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
-
-/* =======================
-   LANGUAGE → VOICE MAP
-======================= */
-const VOICE_MAP = {
-  en: "alloy",
-  ar: "alloy",
-  fr: "alloy",
-  de: "alloy",
-  es: "alloy",
-  ru: "alloy",
-  sq: "alloy" // Albanian
-};
-
-/* =======================
-   PUBLISHED GOOGLE SHEET PARSER (pubhtml)
-   We read the HTML and extract the first HTML table.
-   This is reliable for public read-only queues.
-======================= */
-function stripTags(s) {
-  return String(s || "")
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/?[^>]+>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'");
+function toStr(v) {
+  return typeof v === "string" ? v.trim() : "";
 }
 
-function normalizeKey(k) {
-  return String(k || "")
-    .trim()
-    .replace(/\s+/g, "_")
-    .replace(/[^\w]/g, "")
-    .toLowerCase();
+/**
+ * Convert common Google Sheets links into a CSV-exportable URL.
+ * Supports:
+ * - Published: .../pubhtml?gid=XXXX  -> .../pub?output=csv&gid=XXXX
+ * - Normal: .../d/<sheetId>/edit...  -> .../export?format=csv&gid=XXXX
+ * - If gid missing -> default 0
+ */
+function normalizeToCsvUrl(inputUrl) {
+  const url = toStr(inputUrl);
+  if (!url) return "";
+
+  // If already a CSV export URL, keep it.
+  if (url.includes("output=csv") || url.includes("format=csv")) return url;
+
+  // Extract gid if present
+  const gidMatch = url.match(/[?&]gid=(\d+)/i);
+  const gid = gidMatch?.[1] || "0";
+
+  // 1) Published "pubhtml" -> "pub?output=csv"
+  // Example:
+  // https://docs.google.com/spreadsheets/d/e/<id>/pubhtml?gid=0&single=true
+  // -> https://docs.google.com/spreadsheets/d/e/<id>/pub?output=csv&gid=0
+  if (url.includes("/pubhtml")) {
+    const base = url.split("/pubhtml")[0];
+    return `${base}/pub?output=csv&gid=${gid}`;
+  }
+
+  // 2) Published sometimes already uses /pub
+  if (url.includes("/pub")) {
+    const base = url.split("/pub")[0];
+    return `${base}/pub?output=csv&gid=${gid}`;
+  }
+
+  // 3) Normal sheet: /spreadsheets/d/<sheetId>/edit -> /spreadsheets/d/<sheetId>/export?format=csv&gid=...
+  // Works if sheet is public OR published to web OR accessible without auth (public)
+  const dMatch = url.match(/https:\/\/docs\.google\.com\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  if (dMatch?.[1]) {
+    const sheetId = dMatch[1];
+    return `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+  }
+
+  // Fallback: return as-is (will likely fail, but error will show the URL)
+  return url;
 }
 
-function parseFirstHtmlTable(html) {
-  // Find the first <table ...> ... </table>
-  const tableMatch = html.match(/<table[\s\S]*?<\/table>/i);
-  if (!tableMatch) return { headers: [], rows: [] };
+function parseCsvToObjects(csvText) {
+  const text = toStr(csvText);
+  if (!text) return [];
 
-  const tableHtml = tableMatch[0];
+  // Lightweight CSV parser (no dependency):
+  // - Handles commas and quotes reasonably well
+  // If you later want 100% robust parsing, we can add papaparse.
+  const rows = [];
+  let row = [];
+  let cur = "";
+  let inQuotes = false;
 
-  // Extract rows
-  const trMatches = tableHtml.match(/<tr[\s\S]*?<\/tr>/gi) || [];
-  const allRows = trMatches.map((tr) => {
-    const cellMatches = tr.match(/<(td|th)[\s\S]*?<\/(td|th)>/gi) || [];
-    return cellMatches.map((cell) => stripTags(cell).trim());
-  });
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    const next = text[i + 1];
 
-  if (allRows.length === 0) return { headers: [], rows: [] };
+    if (ch === '"' && inQuotes && next === '"') {
+      cur += '"';
+      i++;
+      continue;
+    }
 
-  // First row = headers
-  const rawHeaders = allRows[0];
-  const headers = rawHeaders.map((h, i) => normalizeKey(h) || `col_${i}`);
+    if (ch === '"') {
+      inQuotes = !inQuotes;
+      continue;
+    }
 
-  // Remaining rows = data
-  const rows = allRows.slice(1).map((cells) => {
+    if (ch === "," && !inQuotes) {
+      row.push(cur);
+      cur = "";
+      continue;
+    }
+
+    if ((ch === "\n" || ch === "\r") && !inQuotes) {
+      if (ch === "\r" && next === "\n") i++; // handle CRLF
+      row.push(cur);
+      cur = "";
+      // ignore totally empty trailing row
+      if (row.some((c) => toStr(c) !== "")) rows.push(row);
+      row = [];
+      continue;
+    }
+
+    cur += ch;
+  }
+
+  // last cell
+  if (cur.length || row.length) {
+    row.push(cur);
+    if (row.some((c) => toStr(c) !== "")) rows.push(row);
+  }
+
+  if (!rows.length) return [];
+
+  const headers = rows[0].map((h) => toStr(h));
+  const data = [];
+
+  for (let r = 1; r < rows.length; r++) {
     const obj = {};
-    headers.forEach((h, i) => {
-      obj[h] = cells[i] ?? "";
+    for (let c = 0; c < headers.length; c++) {
+      const key = headers[c] || `col_${c + 1}`;
+      obj[key] = rows[r][c] ?? "";
+    }
+    // Skip fully empty object
+    if (Object.values(obj).some((v) => toStr(v) !== "")) data.push(obj);
+  }
+
+  return data;
+}
+
+async function fetchSheetRows() {
+  const raw = toStr(SHEET_URL);
+  if (!raw) {
+    return {
+      ok: false,
+      status: 500,
+      error: "Missing GOOGLE_SHEETS_PUBLISHED_URL in environment variables.",
+    };
+  }
+
+  const csvUrl = normalizeToCsvUrl(raw);
+
+  let res;
+  try {
+    res = await fetch(csvUrl, {
+      method: "GET",
+      headers: {
+        "user-agent": "BossMindQueueFetcher/1.0",
+        "accept": "text/csv,text/plain,*/*",
+      },
     });
-    return obj;
-  });
+  } catch (e) {
+    return {
+      ok: false,
+      status: 502,
+      error: `Network error while fetching sheet.`,
+      details: String(e?.message || e),
+      fetched_url: csvUrl,
+    };
+  }
 
-  return { headers, rows };
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    return {
+      ok: false,
+      status: res.status,
+      error: `Failed to fetch Google Sheet (HTTP ${res.status})`,
+      fetched_url: csvUrl,
+      hint:
+        "Make sure the sheet is Published to web OR publicly accessible. The server fetches CSV export.",
+      body_snippet: body.slice(0, 200),
+    };
+  }
+
+  const text = await res.text();
+  const rows = parseCsvToObjects(text);
+
+  return {
+    ok: true,
+    status: 200,
+    fetched_url: csvUrl,
+    row_count: rows.length,
+    rows,
+  };
 }
 
-async function fetchQueueFromPublishedUrl() {
-  const res = await fetch(GOOGLE_SHEETS_PUBLISHED_URL, {
-    headers: { "user-agent": "BossMind/1.0 (+railway)" }
-  });
-  if (!res.ok) throw new Error(`Failed to fetch Published Google Sheet (HTTP ${res.status})`);
+// ---------- Routes ----------
 
-  const html = await res.text();
-  const { rows } = parseFirstHtmlTable(html);
-
-  // Filter totally empty rows
-  const filtered = rows.filter((r) => Object.values(r).some((v) => String(v).trim() !== ""));
-  return filtered;
-}
-
-/* =======================
-   TTS GENERATION
-======================= */
-async function generateSpeech({ text, language }) {
-  const voice = VOICE_MAP[language] || VOICE_MAP.en;
-
-  const audio = await openai.audio.speech.create({
-    model: "gpt-4o-mini-tts",
-    voice,
-    input: text,
-    format: "mp3"
-  });
-
-  const buf = Buffer.from(await audio.arrayBuffer());
-  return buf;
-}
-
-/* =======================
-   ROUTES
-======================= */
-app.get("/health", (_req, res) => {
+app.get("/health", (req, res) => {
   res.json({
     ok: true,
-    service: "BossMind AI Video Generator",
-    queue: "google_sheet_published_url_pubhtml"
+    service: "ai-video-maker",
+    time: new Date().toISOString(),
   });
 });
 
-app.get("/queue", async (_req, res) => {
-  try {
-    const queue = await fetchQueueFromPublishedUrl();
-    res.json(queue);
-  } catch (e) {
-    res.status(500).json({ error: String(e?.message || e) });
+app.get("/queue", async (req, res) => {
+  const result = await fetchSheetRows();
+
+  if (!result.ok) {
+    return res.status(result.status || 500).json({
+      error: result.error,
+      fetched_url: result.fetched_url,
+      hint: result.hint,
+      details: result.details,
+      body_snippet: result.body_snippet,
+    });
   }
+
+  return res.json({
+    source: "google_sheets_csv",
+    fetched_url: result.fetched_url,
+    row_count: result.row_count,
+    rows: result.rows,
+  });
 });
 
-app.post("/tts", async (req, res) => {
-  try {
-    const { text, language = "en" } = req.body || {};
-    if (!text) return res.status(400).json({ error: "text is required" });
-
-    const audio = await generateSpeech({ text, language });
-
-    res.setHeader("Content-Type", "audio/mpeg");
-    res.setHeader("Content-Length", String(audio.length));
-    res.send(audio);
-  } catch (e) {
-    res.status(500).json({ error: String(e?.message || e) });
-  }
-});
-
-/* =======================
-   START
-======================= */
+// ---------- Start ----------
 app.listen(PORT, () => {
   console.log(`[BossMind] Backend LIVE on port ${PORT}`);
-  console.log(`[BossMind] Queue source: PUBLISHED Google Sheet (pubhtml)`);
-  console.log(`[BossMind] Published URL: ${GOOGLE_SHEETS_PUBLISHED_URL}`);
-
-  if (GOOGLE_SHEETS_SPREADSHEET_ID || GOOGLE_SHEETS_SHEET_NAME) {
-    console.log(
-      `[BossMind] (info) Sheet: ${GOOGLE_SHEETS_SPREADSHEET_ID} / ${GOOGLE_SHEETS_SHEET_NAME}`
-    );
-  }
-
-  console.log(`[BossMind] TTS: OpenAI (gpt-4o-mini-tts)`);
+  console.log(`[BossMind] Queue source (raw): ${SHEET_URL || "(missing)"}`);
+  console.log(`[BossMind] Queue source (csv): ${normalizeToCsvUrl(SHEET_URL || "")}`);
 });
