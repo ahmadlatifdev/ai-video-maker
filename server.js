@@ -1,234 +1,162 @@
 /**
- * BossMind AI Video Maker — server.js
- * Fetches Google Sheets (Published or normal) as CSV, parses rows, returns JSON at /queue
+ * BossMind AI Video Maker — Backend (Google Sheets API)
+ * ✅ No "Publish to web"
+ * ✅ No /d/e/2PACX links
+ * ✅ No CSV scraping
+ * ✅ Stable 24/7 with Service Account
  */
 
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
-
-dotenv.config();
+import { google } from "googleapis";
 
 const app = express();
+
+// ---- Basics
 app.use(cors());
-app.use(express.json({ limit: "1mb" }));
+app.use(express.json({ limit: "2mb" }));
 
-const PORT = process.env.PORT || 8080;
+const PORT = Number(process.env.PORT || 8080);
 
-// REQUIRED
-const SHEET_URL = process.env.GOOGLE_SHEETS_PUBLISHED_URL;
+// ---- Required ENV
+// 1) GOOGLE_SERVICE_ACCOUNT_JSON_BASE64  (recommended)  OR  GOOGLE_SERVICE_ACCOUNT_JSON
+// 2) GOOGLE_SHEETS_SPREADSHEET_ID        (the sheet id after /d/ in the URL)
+// Optional:
+// - GOOGLE_SHEETS_TAB  (default: "KokiDodi-1")
+// - GOOGLE_SHEETS_RANGE (default: "A1:Z")
+// - QUEUE_STATUS_FILTER (default: "READY")  (set empty to disable filter)
 
-// ---------- Helpers ----------
+function getServiceAccountObject() {
+  const b64 = process.env.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64?.trim();
+  if (b64) {
+    const jsonStr = Buffer.from(b64, "base64").toString("utf8");
+    return JSON.parse(jsonStr);
+  }
 
-function toStr(v) {
-  return typeof v === "string" ? v.trim() : "";
+  const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON?.trim();
+  if (raw) return JSON.parse(raw);
+
+  throw new Error(
+    "Missing service account credentials. Set GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 (preferred) or GOOGLE_SERVICE_ACCOUNT_JSON."
+  );
 }
 
-/**
- * Convert common Google Sheets links into a CSV-exportable URL.
- * Supports:
- * - Published: .../pubhtml?gid=XXXX  -> .../pub?output=csv&gid=XXXX
- * - Normal: .../d/<sheetId>/edit...  -> .../export?format=csv&gid=XXXX
- * - If gid missing -> default 0
- */
-function normalizeToCsvUrl(inputUrl) {
-  const url = toStr(inputUrl);
-  if (!url) return "";
-
-  // If already a CSV export URL, keep it.
-  if (url.includes("output=csv") || url.includes("format=csv")) return url;
-
-  // Extract gid if present
-  const gidMatch = url.match(/[?&]gid=(\d+)/i);
-  const gid = gidMatch?.[1] || "0";
-
-  // 1) Published "pubhtml" -> "pub?output=csv"
-  // Example:
-  // https://docs.google.com/spreadsheets/d/e/<id>/pubhtml?gid=0&single=true
-  // -> https://docs.google.com/spreadsheets/d/e/<id>/pub?output=csv&gid=0
-  if (url.includes("/pubhtml")) {
-    const base = url.split("/pubhtml")[0];
-    return `${base}/pub?output=csv&gid=${gid}`;
-  }
-
-  // 2) Published sometimes already uses /pub
-  if (url.includes("/pub")) {
-    const base = url.split("/pub")[0];
-    return `${base}/pub?output=csv&gid=${gid}`;
-  }
-
-  // 3) Normal sheet: /spreadsheets/d/<sheetId>/edit -> /spreadsheets/d/<sheetId>/export?format=csv&gid=...
-  // Works if sheet is public OR published to web OR accessible without auth (public)
-  const dMatch = url.match(/https:\/\/docs\.google\.com\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-  if (dMatch?.[1]) {
-    const sheetId = dMatch[1];
-    return `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
-  }
-
-  // Fallback: return as-is (will likely fail, but error will show the URL)
-  return url;
+function normalizeHeaders(headers) {
+  return headers.map((h, idx) => {
+    const t = String(h ?? "").trim();
+    return t.length ? t : `col_${idx + 1}`;
+  });
 }
 
-function parseCsvToObjects(csvText) {
-  const text = toStr(csvText);
-  if (!text) return [];
+function rowsToObjects(values) {
+  if (!Array.isArray(values) || values.length === 0) return [];
 
-  // Lightweight CSV parser (no dependency):
-  // - Handles commas and quotes reasonably well
-  // If you later want 100% robust parsing, we can add papaparse.
-  const rows = [];
-  let row = [];
-  let cur = "";
-  let inQuotes = false;
+  const headers = normalizeHeaders(values[0] || []);
+  const out = [];
 
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
-    const next = text[i + 1];
+  for (let i = 1; i < values.length; i++) {
+    const row = values[i] || [];
+    // skip fully empty rows
+    const hasAny = row.some((c) => String(c ?? "").trim().length > 0);
+    if (!hasAny) continue;
 
-    if (ch === '"' && inQuotes && next === '"') {
-      cur += '"';
-      i++;
-      continue;
-    }
-
-    if (ch === '"') {
-      inQuotes = !inQuotes;
-      continue;
-    }
-
-    if (ch === "," && !inQuotes) {
-      row.push(cur);
-      cur = "";
-      continue;
-    }
-
-    if ((ch === "\n" || ch === "\r") && !inQuotes) {
-      if (ch === "\r" && next === "\n") i++; // handle CRLF
-      row.push(cur);
-      cur = "";
-      // ignore totally empty trailing row
-      if (row.some((c) => toStr(c) !== "")) rows.push(row);
-      row = [];
-      continue;
-    }
-
-    cur += ch;
-  }
-
-  // last cell
-  if (cur.length || row.length) {
-    row.push(cur);
-    if (row.some((c) => toStr(c) !== "")) rows.push(row);
-  }
-
-  if (!rows.length) return [];
-
-  const headers = rows[0].map((h) => toStr(h));
-  const data = [];
-
-  for (let r = 1; r < rows.length; r++) {
     const obj = {};
     for (let c = 0; c < headers.length; c++) {
-      const key = headers[c] || `col_${c + 1}`;
-      obj[key] = rows[r][c] ?? "";
+      obj[headers[c]] = row[c] ?? "";
     }
-    // Skip fully empty object
-    if (Object.values(obj).some((v) => toStr(v) !== "")) data.push(obj);
+    out.push(obj);
   }
-
-  return data;
+  return out;
 }
 
 async function fetchSheetRows() {
-  const raw = toStr(SHEET_URL);
-  if (!raw) {
-    return {
-      ok: false,
-      status: 500,
-      error: "Missing GOOGLE_SHEETS_PUBLISHED_URL in environment variables.",
-    };
+  const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID?.trim();
+  if (!spreadsheetId) {
+    throw new Error("Missing GOOGLE_SHEETS_SPREADSHEET_ID.");
   }
 
-  const csvUrl = normalizeToCsvUrl(raw);
+  const tab = (process.env.GOOGLE_SHEETS_TAB || "KokiDodi-1").trim();
+  const rangePart = (process.env.GOOGLE_SHEETS_RANGE || "A1:Z").trim();
+  const range = `${tab}!${rangePart}`;
 
-  let res;
-  try {
-    res = await fetch(csvUrl, {
-      method: "GET",
-      headers: {
-        "user-agent": "BossMindQueueFetcher/1.0",
-        "accept": "text/csv,text/plain,*/*",
-      },
+  const creds = getServiceAccountObject();
+
+  // Auth (Service Account)
+  const auth = new google.auth.GoogleAuth({
+    credentials: {
+      client_email: creds.client_email,
+      private_key: creds.private_key,
+    },
+    scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
+  });
+
+  const client = await auth.getClient();
+  const sheets = google.sheets({ version: "v4", auth: client });
+
+  const resp = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range,
+    majorDimension: "ROWS",
+    valueRenderOption: "FORMATTED_VALUE",
+  });
+
+  const values = resp?.data?.values || [];
+  let rows = rowsToObjects(values);
+
+  // Optional status filter
+  const statusFilter = (process.env.QUEUE_STATUS_FILTER ?? "READY").trim();
+  if (statusFilter) {
+    rows = rows.filter((r) => {
+      const s =
+        r.Status ??
+        r.status ??
+        r.STATE ??
+        r.State ??
+        r.queue_status ??
+        r.QueueStatus ??
+        "";
+      return String(s).trim().toUpperCase() === statusFilter.toUpperCase();
     });
-  } catch (e) {
-    return {
-      ok: false,
-      status: 502,
-      error: `Network error while fetching sheet.`,
-      details: String(e?.message || e),
-      fetched_url: csvUrl,
-    };
   }
 
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    return {
-      ok: false,
-      status: res.status,
-      error: `Failed to fetch Google Sheet (HTTP ${res.status})`,
-      fetched_url: csvUrl,
-      hint:
-        "Make sure the sheet is Published to web OR publicly accessible. The server fetches CSV export.",
-      body_snippet: body.slice(0, 200),
-    };
-  }
-
-  const text = await res.text();
-  const rows = parseCsvToObjects(text);
-
-  return {
-    ok: true,
-    status: 200,
-    fetched_url: csvUrl,
-    row_count: rows.length,
-    rows,
-  };
+  return { spreadsheetId, tab, range, row_count: rows.length, rows };
 }
 
-// ---------- Routes ----------
-
-app.get("/health", (req, res) => {
+// ---- Routes
+app.get("/", (req, res) => {
   res.json({
     ok: true,
     service: "ai-video-maker",
+    bossmind: true,
+    mode: "google-sheets-api",
     time: new Date().toISOString(),
   });
 });
 
-app.get("/queue", async (req, res) => {
-  const result = await fetchSheetRows();
-
-  if (!result.ok) {
-    return res.status(result.status || 500).json({
-      error: result.error,
-      fetched_url: result.fetched_url,
-      hint: result.hint,
-      details: result.details,
-      body_snippet: result.body_snippet,
-    });
-  }
-
-  return res.json({
-    source: "google_sheets_csv",
-    fetched_url: result.fetched_url,
-    row_count: result.row_count,
-    rows: result.rows,
-  });
+app.get("/health", (req, res) => {
+  res.json({ ok: true, status: "healthy", time: new Date().toISOString() });
 });
 
-// ---------- Start ----------
+// ✅ This is the endpoint you wanted to validate
+app.get("/queue", async (req, res) => {
+  try {
+    const data = await fetchSheetRows();
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({
+      error: "Failed to read Google Sheet via API",
+      hint:
+        "Ensure: (1) Service account JSON is set in Railway env, (2) The Sheet is shared with the service account email as Viewer, (3) Spreadsheet ID + tab name are correct.",
+      details: String(err?.message || err),
+    });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`[BossMind] Backend LIVE on port ${PORT}`);
-  console.log(`[BossMind] Queue source (raw): ${SHEET_URL || "(missing)"}`);
-  console.log(`[BossMind] Queue source (csv): ${normalizeToCsvUrl(SHEET_URL || "")}`);
+  console.log(`[BossMind] Mode: Google Sheets API (Service Account)`);
+  console.log(`[BossMind] Spreadsheet ID: ${process.env.GOOGLE_SHEETS_SPREADSHEET_ID || "(missing)"}`);
+  console.log(`[BossMind] Tab: ${process.env.GOOGLE_SHEETS_TAB || "KokiDodi-1"}`);
+  console.log(`[BossMind] Range: ${process.env.GOOGLE_SHEETS_RANGE || "A1:Z"}`);
+  console.log(`[BossMind] Status filter: ${process.env.QUEUE_STATUS_FILTER ?? "READY"}`);
 });
