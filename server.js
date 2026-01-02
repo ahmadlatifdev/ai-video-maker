@@ -1,25 +1,22 @@
 /**
- * BossMind AI Video Generator - Backend Wiring Phase
- * server.js (CommonJS – Railway Safe)
+ * BossMind AI Video Generator – Backend Wiring Phase (FINAL for Published Sheet)
+ * server.js (CommonJS, Railway-safe, NO Google Auth)
  *
- * Goal:
- * Replace BigBuckBunny placeholder with Google Sheet queue,
- * then expose language + voice wiring endpoints.
+ * Queue source: Google Sheets "Publish to web" (machine-readable)
+ *
+ * Required ENV:
+ *  - PORT (optional)
+ *  - GOOGLE_SHEETS_SPREADSHEET_ID
+ *  - GOOGLE_SHEETS_SHEET_NAME
+ * Optional ENV:
+ *  - DEFAULT_LANGS (e.g. "ar,en,fr,de,es,ru,sq")
+ *  - DEFAULT_VOICES_JSON (e.g. {"ar":{"voice":"ar-voice-1"},"en":{"voice":"en-voice-1"}})
  */
-
-try {
-  require("dotenv").config();
-} catch (_) {
-  // Railway provides ENV without dotenv; keep running.
-}
 
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
-
-const { createClient } = require("@supabase/supabase-js");
-const { google } = require("googleapis");
 
 /* ----------------------------- App ----------------------------- */
 const app = express();
@@ -28,7 +25,7 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: "2mb" }));
 app.use(morgan("dev"));
 
-/* ----------------------------- ENV ----------------------------- */
+/* ----------------------------- ENV helpers ----------------------------- */
 function mustEnv(name) {
   const v = process.env[name];
   if (!v) throw new Error(`Missing required ENV: ${name}`);
@@ -37,16 +34,12 @@ function mustEnv(name) {
 
 const PORT = Number(process.env.PORT || 8080);
 
-const SUPABASE_URL = mustEnv("SUPABASE_URL");
-const SUPABASE_SERVICE_ROLE_KEY = mustEnv("SUPABASE_SERVICE_ROLE_KEY");
-
 const SHEET_ID = mustEnv("GOOGLE_SHEETS_SPREADSHEET_ID");
 const SHEET_NAME = mustEnv("GOOGLE_SHEETS_SHEET_NAME");
-const GOOGLE_SERVICE_ACCOUNT_JSON = mustEnv("GOOGLE_SERVICE_ACCOUNT_JSON");
 
 const DEFAULT_LANGS = (process.env.DEFAULT_LANGS || "ar,en,fr,de,es,ru,sq")
   .split(",")
-  .map((v) => v.trim())
+  .map((s) => s.trim())
   .filter(Boolean);
 
 let DEFAULT_VOICES = {};
@@ -56,75 +49,117 @@ try {
   DEFAULT_VOICES = {};
 }
 
-/* ----------------------------- Supabase ----------------------------- */
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-  auth: { persistSession: false },
-});
-
-/* ----------------------------- Google Sheets ----------------------------- */
-function parseServiceAccount(raw) {
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return JSON.parse(Buffer.from(raw, "base64").toString("utf8"));
+/* ----------------------------- Fetch (no extra deps) ----------------------------- */
+async function fetchText(url) {
+  // Node 18+ has fetch globally. If not, fail clearly.
+  if (typeof fetch !== "function") {
+    throw new Error("Global fetch not available. Use Node 18+ runtime.");
   }
+  const res = await fetch(url, { method: "GET" });
+  if (!res.ok) throw new Error(`Fetch failed ${res.status}: ${await res.text()}`);
+  return await res.text();
 }
 
-const serviceAccount = parseServiceAccount(GOOGLE_SERVICE_ACCOUNT_JSON);
-
-const jwt = new google.auth.JWT({
-  email: serviceAccount.client_email,
-  key: String(serviceAccount.private_key || "").replace(/\\n/g, "\n"),
-  scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
-});
-
-const sheets = google.sheets({ version: "v4", auth: jwt });
-
-async function readSheet(range) {
-  const res = await sheets.spreadsheets.values.get({
-    spreadsheetId: SHEET_ID,
-    range,
-    valueRenderOption: "UNFORMATTED_VALUE",
-  });
-  return res.data.values || [];
+/* ----------------------------- Sheet reader (Published-to-web / gviz) ----------------------------- */
+function gvizUrl(sheetId, sheetName) {
+  // This works when sheet is "Published to web"
+  return (
+    `https://docs.google.com/spreadsheets/d/${sheetId}` +
+    `/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`
+  );
 }
 
-function normalize(h) {
-  return String(h || "").trim().toLowerCase().replace(/\s+/g, "_");
+function parseGviz(text) {
+  // Google returns: google.visualization.Query.setResponse(<json>);
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start < 0 || end < 0) throw new Error("Unexpected GViz response.");
+  const jsonStr = text.slice(start, end + 1);
+  return JSON.parse(jsonStr);
 }
 
-async function getNextQueueItem() {
-  const rows = await readSheet(`${SHEET_NAME}!A1:ZZ5000`);
-  if (!rows.length) return null;
+function normalizeHeader(h) {
+  return String(h || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+}
 
-  const headers = rows[0].map(normalize);
+function toCellValue(cell) {
+  // cell can be null, or {v:...}
+  if (!cell) return "";
+  if (typeof cell.v === "undefined" || cell.v === null) return "";
+  return cell.v;
+}
 
-  for (let i = 1; i < rows.length; i++) {
-    const row = rows[i] || [];
-    const obj = {};
-    headers.forEach((h, idx) => (obj[h] = row[idx] ?? ""));
+/**
+ * Expected columns (recommended):
+ *  - status : "ready" | "processing" | "done"
+ *  - title
+ *  - prompt
+ *  - language (optional)
+ *  - voice (optional)
+ *  - youtube_url OR video_url (optional)
+ *
+ * Selection rules:
+ *  - If status exists: pick first row where status == "ready"
+ *  - Else: pick first row where youtube_url/video_url is empty
+ */
+async function fetchNextQueueItemFromPublishedSheet() {
+  const url = gvizUrl(SHEET_ID, SHEET_NAME);
+  const raw = await fetchText(url);
+  const data = parseGviz(raw);
 
-    const status = String(obj.status || "").trim().toLowerCase();
-    const hasLink = Boolean(obj.youtube_url || obj.video_url);
+  const table = data.table;
+  if (!table || !table.cols || !table.rows) return null;
 
-    // Preferred: status column controls readiness
-    if (status) {
-      if (status !== "ready") continue;
-    } else {
-      // Fallback: if no status column used, pick first row without a published link
-      if (hasLink) continue;
-    }
+  const headers = table.cols.map((c) => normalizeHeader(c.label));
+  const rows = table.rows;
 
-    const lang = String(obj.language || "").trim() || DEFAULT_LANGS[0] || "en";
-    const voice = String(obj.voice || "").trim() || (DEFAULT_VOICES[lang]?.voice || "");
+  const statusIdx = headers.indexOf("status");
+  const titleIdx = headers.indexOf("title");
+  const promptIdx = headers.indexOf("prompt");
+  const languageIdx = headers.indexOf("language");
+  const voiceIdx = headers.indexOf("voice");
+  const youtubeIdx = headers.indexOf("youtube_url");
+  const videoIdx = headers.indexOf("video_url");
+
+  for (let r = 0; r < rows.length; r++) {
+    const cells = rows[r].c || [];
+    const get = (idx) => (idx >= 0 ? toCellValue(cells[idx]) : "");
+
+    const status = String(get(statusIdx)).trim().toLowerCase();
+    const youtube = String(get(youtubeIdx)).trim();
+    const video = String(get(videoIdx)).trim();
+
+    const readyByStatus = statusIdx >= 0 ? status === "ready" : false;
+    const readyByNoLinks =
+      statusIdx < 0 &&
+      ((youtubeIdx >= 0 && !youtube) || (videoIdx >= 0 && !video) || (youtubeIdx < 0 && videoIdx < 0));
+
+    if (!readyByStatus && !readyByNoLinks) continue;
+
+    const title = String(get(titleIdx)).trim();
+    const prompt = String(get(promptIdx)).trim();
+
+    const langRaw = String(get(languageIdx)).trim();
+    const language = langRaw || DEFAULT_LANGS[0] || "en";
+
+    const voiceRaw = String(get(voiceIdx)).trim();
+    const voice = voiceRaw || (DEFAULT_VOICES[language]?.voice || "");
+
+    // Build raw object for debugging/preview
+    const rawObj = {};
+    for (let i = 0; i < headers.length; i++) rawObj[headers[i]] = toCellValue(cells[i]);
 
     return {
-      sheetRow: i + 1,
-      title: String(obj.title || "").trim(),
-      prompt: String(obj.prompt || "").trim(),
-      language: lang,
+      sheet: { rowIndex0Based: r, rowIndex1BasedApprox: r + 2 }, // header row + 1
+      title,
+      prompt,
+      language,
       voice,
-      raw: obj,
+      raw: rawObj,
+      source: "published_sheet_gviz",
     };
   }
 
@@ -132,47 +167,41 @@ async function getNextQueueItem() {
 }
 
 /* ----------------------------- Routes ----------------------------- */
-app.get("/health", (_, res) => {
+app.get("/health", (req, res) => {
   res.json({ ok: true, service: "bossmind-video-backend", time: new Date().toISOString() });
 });
 
-app.get("/api/queue/next", async (_, res) => {
+/**
+ * GET /api/queue/next
+ * Returns next queue item from Google Sheet (Published-to-web).
+ */
+app.get("/api/queue/next", async (req, res) => {
   try {
-    const item = await getNextQueueItem();
+    const item = await fetchNextQueueItemFromPublishedSheet();
     if (!item) return res.status(204).send();
     res.json({ ok: true, item });
   } catch (e) {
-    res.status(500).json({ ok: false, error: e.message || String(e) });
+    res.status(500).json({ ok: false, error: e?.message || String(e) });
   }
 });
 
-app.get("/api/config/languages", (_, res) => {
+/**
+ * GET /api/config/languages
+ */
+app.get("/api/config/languages", (req, res) => {
   res.json({ ok: true, languages: DEFAULT_LANGS });
 });
 
-app.get("/api/config/voices", (_, res) => {
+/**
+ * GET /api/config/voices
+ */
+app.get("/api/config/voices", (req, res) => {
   res.json({ ok: true, voices: DEFAULT_VOICES });
-});
-
-app.post("/api/logs/event", async (req, res) => {
-  try {
-    const { type, message, meta } = req.body || {};
-    const { error } = await supabase.from("system_logs").insert({
-      type: type || "event",
-      message: message || "",
-      meta: meta || {},
-      created_at: new Date().toISOString(),
-    });
-
-    if (error) return res.status(500).json({ ok: false, error: error.message });
-    res.json({ ok: true });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e.message || String(e) });
-  }
 });
 
 /* ----------------------------- Start ----------------------------- */
 app.listen(PORT, () => {
   console.log(`[BossMind] Backend LIVE on port ${PORT}`);
-  console.log(`[BossMind] Queue source: Google Sheets -> ${SHEET_ID} / ${SHEET_NAME}`);
+  console.log(`[BossMind] Queue source: PUBLISHED Google Sheet (GViz)`);
+  console.log(`[BossMind] Sheet: ${SHEET_ID} / ${SHEET_NAME}`);
 });
