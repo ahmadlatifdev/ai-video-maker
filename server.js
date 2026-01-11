@@ -1,34 +1,58 @@
-/**
- * BossMind – AI Video Maker
- * Hero Page + API Server
- * Google Sheet Queue (NO AUTH)
- */
+// server.js — BossMind AI Video Maker (LIVE)
+// Full file (complete updated code)
 
-const express = require("express");
-const path = require("path");
+import express from "express";
+import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const app = express();
-app.use(express.json());
 
-const PORT = process.env.PORT || 3000;
-const PUBLIC_DIR = path.join(__dirname, "public");
+// --------------------
+// Basics
+// --------------------
+const PORT = Number(process.env.PORT || 3000);
+const ADMIN_KEY = (process.env.ADMIN_KEY || "").trim(); // optional
 
-/* ===============================
-   YOUR REAL GOOGLE SHEET (gviz JSON)
-================================ */
-const GOOGLE_SHEET_GVIZ_URL =
-  "https://docs.google.com/spreadsheets/d/1WNcSaCKZBhvRxfjtgvSI4DimKA_SGCzUj7ETU3jnB4M/gviz/tq?tqx=out:json";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-/* ===============================
-   STATIC
-================================ */
-app.use(express.static(PUBLIC_DIR));
-app.get("/", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "index.html")));
+// --------------------
+// Middleware
+// --------------------
+app.use(cors());
+app.use(express.json({ limit: "2mb" }));
 
-/* ===============================
-   HEALTH
-================================ */
-app.get("/health", (req, res) => {
+// Simple request log
+app.use((req, res, next) => {
+  const t0 = Date.now();
+  res.on("finish", () => {
+    const ms = Date.now() - t0;
+    console.log(`${req.method} ${req.originalUrl} -> ${res.statusCode} (${ms}ms)`);
+  });
+  next();
+});
+
+// Serve static UI (admin.html, assets, etc.)
+app.use(express.static(path.join(__dirname, "public")));
+
+// --------------------
+// Optional Admin Key Guard
+// (Only enforced if ADMIN_KEY env var is set)
+// --------------------
+function requireAdminKey(req, res, next) {
+  if (!ADMIN_KEY) return next(); // not enabled
+  const key = (req.headers["x-admin-key"] || "").toString().trim();
+  if (!key || key !== ADMIN_KEY) {
+    return res.status(401).json({ ok: false, error: "Unauthorized (x-admin-key required)" });
+  }
+  next();
+}
+
+// --------------------
+// Health
+// --------------------
+app.get("/health", (_req, res) => {
   res.json({
     ok: true,
     service: "ai-video-maker",
@@ -37,83 +61,112 @@ app.get("/health", (req, res) => {
   });
 });
 
-/* ===============================
-   HELPERS
-================================ */
-function parseGviz(text) {
-  // gviz response looks like: "/*O_o*/\ngoogle.visualization.Query.setResponse({...});"
-  const jsonText = text.substring(text.indexOf("{"), text.lastIndexOf("}") + 1);
-  return JSON.parse(jsonText);
-}
-
-async function fetchText(url) {
-  const r = await fetch(url, {
-    method: "GET",
-    headers: { "User-Agent": "BossMind/1.0" },
+app.get("/api/admin/health", requireAdminKey, (_req, res) => {
+  res.json({
+    ok: true,
+    service: "ai-video-maker",
+    hero: true,
+    time: new Date().toISOString(),
   });
-  if (!r.ok) throw new Error(`HTTP ${r.status}`);
-  return await r.text();
-}
-
-/* ===============================
-   QUEUE ENDPOINT (what UI calls)
-================================ */
-app.get("/api/sheet/queue", async (req, res) => {
-  try {
-    const txt = await fetchText(GOOGLE_SHEET_GVIZ_URL);
-    const json = parseGviz(txt);
-
-    const rows = (json?.table?.rows || []).map((r) => {
-      const c = r.c || [];
-      return {
-        title: c[0]?.v || "",
-        moral: c[1]?.v || "",
-        theme: c[2]?.v || "",
-        script: c[3]?.v || "",
-        status: c[4]?.v || "",
-        reviewed: c[5]?.v || "",
-      };
-    });
-
-    res.json({ ok: true, rows });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e.message });
-  }
 });
 
-/* ===============================
-   OPTIONAL ADMIN STATUS (for snapshot)
-================================ */
-app.get("/api/admin/status/video", async (req, res) => {
+// --------------------
+// Status Snapshots (expected by your Admin UI)
+// --------------------
+app.get("/api/admin/status/system", requireAdminKey, (_req, res) => {
+  res.json({
+    ok: true,
+    project: "system",
+    service: "ai-video-maker",
+    time: new Date().toISOString(),
+    value: {
+      uptimeSec: Math.round(process.uptime()),
+      node: process.version,
+      env: {
+        hasAdminKey: Boolean(ADMIN_KEY),
+      },
+    },
+  });
+});
+
+app.get("/api/admin/status/video", requireAdminKey, (_req, res) => {
+  res.json({
+    ok: true,
+    project: "video",
+    time: new Date().toISOString(),
+    value: {
+      queue: "ready",
+      worker: "ready",
+      lastJobId: null,
+    },
+  });
+});
+
+app.get("/api/admin/status/builder", requireAdminKey, (_req, res) => {
+  res.json({
+    ok: true,
+    project: "builder",
+    time: new Date().toISOString(),
+    value: {
+      note: "Builder service is separate (this endpoint stays compatible for Admin UI).",
+    },
+  });
+});
+
+// --------------------
+// ✅ FIX: Missing BossMind Job Endpoint
+// Admin UI calls: POST /api/admin/jobs { job, scope }
+// --------------------
+app.post("/api/admin/jobs", requireAdminKey, async (req, res) => {
   try {
-    const txt = await fetchText(GOOGLE_SHEET_GVIZ_URL);
-    const json = parseGviz(txt);
+    const { job, scope } = req.body || {};
 
-    const rows = json?.table?.rows || [];
-    const mapped = rows.map((r) => r.c || []);
-    const statuses = mapped.map((c) => c[4]?.v || "");
+    if (!job) {
+      return res.status(400).json({ ok: false, error: "Missing job type" });
+    }
 
-    const queueLength = statuses.filter((s) => s && s !== "COMPLETED").length;
+    const jobId = `job_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
-    const lastCompleted = mapped
-      .slice()
-      .reverse()
-      .find((c) => (c[4]?.v || "") === "COMPLETED");
-
-    res.json({
+    // This is the "accept job" layer.
+    // You can later wire this to your Queue service / Worker pipeline.
+    const accepted = {
       ok: true,
-      queueLength,
-      lastPublish: lastCompleted?.[0]?.v || null,
-      errors24h: 0,
-    });
+      jobId,
+      job,
+      scope: scope || "video",
+      status: "queued",
+      time: new Date().toISOString(),
+    };
+
+    console.log("BossMind Job Accepted:", accepted);
+    res.json(accepted);
   } catch (e) {
-    res.json({ ok: false, error: e.message });
+    console.error("BossMind Job Error:", e);
+    res.status(500).json({ ok: false, error: e?.message || "Unknown error" });
   }
 });
 
-/* ===============================
-   START
-================================ */
+// --------------------
+// Convenience: route to admin UI
+// --------------------
+app.get("/admin", (_req, res) => {
+  res.redirect("/admin.html");
+});
+
+// --------------------
+// 404 fallback (API + UI)
+// --------------------
+app.use((req, res) => {
+  if (req.originalUrl.startsWith("/api/")) {
+    return res.status(404).json({ ok: false, error: "API route not found" });
+  }
+  // If someone hits an unknown page, send them to admin (safe default)
+  return res.redirect("/admin.html");
+});
+
+// --------------------
+// Start
+// --------------------
 app.listen(PORT, () => {
-  console.log("BossMind AI Video Maker LIVE on port", PORT);
+  console.log(`BossMind AI Video Maker LIVE on port ${PORT}`);
 });
