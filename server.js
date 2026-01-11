@@ -1,8 +1,7 @@
 // server.js — BossMind AI Video Maker (LIVE)
-// ✅ CommonJS version (fixes: "Cannot use import statement outside a module")
+// ✅ ZERO-dependency version (fixes: "Cannot find module 'cors'")
 
 const express = require("express");
-const cors = require("cors");
 const path = require("path");
 
 const app = express();
@@ -16,8 +15,16 @@ const ADMIN_KEY = (process.env.ADMIN_KEY || "").trim(); // optional
 // --------------------
 // Middleware
 // --------------------
-app.use(cors());
 app.use(express.json({ limit: "2mb" }));
+
+// Minimal CORS (no cors package needed)
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Admin-Key, x-admin-key");
+  if (req.method === "OPTIONS") return res.sendStatus(204);
+  next();
+});
 
 // Simple request log
 app.use((req, res, next) => {
@@ -38,7 +45,7 @@ app.use(express.static(path.join(__dirname, "public")));
 // --------------------
 function requireAdminKey(req, res, next) {
   if (!ADMIN_KEY) return next(); // not enabled
-  const key = (req.headers["x-admin-key"] || "").toString().trim();
+  const key = (req.headers["x-admin-key"] || req.headers["X-Admin-Key"] || "").toString().trim();
   if (!key || key !== ADMIN_KEY) {
     return res.status(401).json({ ok: false, error: "Unauthorized (x-admin-key required)" });
   }
@@ -108,16 +115,13 @@ app.get("/api/admin/status/builder", requireAdminKey, (_req, res) => {
 });
 
 // --------------------
-// ✅ FIX: Missing BossMind Job Endpoint
+// ✅ Missing BossMind Job Endpoint
 // Admin UI calls: POST /api/admin/jobs { job, scope }
 // --------------------
 app.post("/api/admin/jobs", requireAdminKey, async (req, res) => {
   try {
     const { job, scope } = req.body || {};
-
-    if (!job) {
-      return res.status(400).json({ ok: false, error: "Missing job type" });
-    }
+    if (!job) return res.status(400).json({ ok: false, error: "Missing job type" });
 
     const jobId = `job_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
@@ -134,16 +138,14 @@ app.post("/api/admin/jobs", requireAdminKey, async (req, res) => {
     res.json(accepted);
   } catch (e) {
     console.error("BossMind Job Error:", e);
-    res.status(500).json({ ok: false, error: (e && e.message) ? e.message : "Unknown error" });
+    res.status(500).json({ ok: false, error: e?.message || "Unknown error" });
   }
 });
 
 // --------------------
 // Convenience: route to admin UI
 // --------------------
-app.get("/admin", (_req, res) => {
-  res.redirect("/admin.html");
-});
+app.get("/admin", (_req, res) => res.redirect("/admin.html"));
 
 // --------------------
 // 404 fallback (API + UI)
