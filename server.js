@@ -1,10 +1,9 @@
 // server.js — BossMind AI Video Maker (LIVE)
-// Full file (complete updated code)
+// ✅ CommonJS version (fixes: "Cannot use import statement outside a module")
 
-import express from "express";
-import cors from "cors";
-import path from "path";
-import { fileURLToPath } from "url";
+const express = require("express");
+const cors = require("cors");
+const path = require("path");
 
 const app = express();
 
@@ -13,9 +12,6 @@ const app = express();
 // --------------------
 const PORT = Number(process.env.PORT || 3000);
 const ADMIN_KEY = (process.env.ADMIN_KEY || "").trim(); // optional
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // --------------------
 // Middleware
@@ -82,9 +78,7 @@ app.get("/api/admin/status/system", requireAdminKey, (_req, res) => {
     value: {
       uptimeSec: Math.round(process.uptime()),
       node: process.version,
-      env: {
-        hasAdminKey: Boolean(ADMIN_KEY),
-      },
+      env: { hasAdminKey: Boolean(ADMIN_KEY) },
     },
   });
 });
@@ -127,8 +121,6 @@ app.post("/api/admin/jobs", requireAdminKey, async (req, res) => {
 
     const jobId = `job_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
-    // This is the "accept job" layer.
-    // You can later wire this to your Queue service / Worker pipeline.
     const accepted = {
       ok: true,
       jobId,
@@ -142,7 +134,7 @@ app.post("/api/admin/jobs", requireAdminKey, async (req, res) => {
     res.json(accepted);
   } catch (e) {
     console.error("BossMind Job Error:", e);
-    res.status(500).json({ ok: false, error: e?.message || "Unknown error" });
+    res.status(500).json({ ok: false, error: (e && e.message) ? e.message : "Unknown error" });
   }
 });
 
@@ -160,7 +152,6 @@ app.use((req, res) => {
   if (req.originalUrl.startsWith("/api/")) {
     return res.status(404).json({ ok: false, error: "API route not found" });
   }
-  // If someone hits an unknown page, send them to admin (safe default)
   return res.redirect("/admin.html");
 });
 
